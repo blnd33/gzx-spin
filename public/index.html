@@ -66,8 +66,8 @@ button{cursor:pointer}
 .legend li .ic{font-size:1.2em;color:var(--lc,var(--tc))}
 
 /* ===================== Wheel ===================== */
-.wheel{position:relative;width:min(74cqh,88cqw);aspect-ratio:1;container-type:inline-size;flex:none}
-@media (min-aspect-ratio:1001/1000){.wheel{width:min(73cqh,86cqw)}}
+.wheel{position:relative;width:min(66cqh,86cqw);aspect-ratio:1;container-type:inline-size;flex:none}
+@media (min-aspect-ratio:1001/1000){.wheel{width:min(67cqh,86cqw)}}
 .wheel-glow{position:absolute;inset:-9%;border-radius:50%;background:radial-gradient(circle,rgba(255,106,0,.42) 0%,rgba(232,39,12,.18) 45%,transparent 68%);animation:breathe 3.2s ease-in-out infinite;pointer-events:none}
 .wheel.is-spinning .wheel-glow{animation-duration:.9s}
 @keyframes breathe{50%{opacity:.6;transform:scale(.97)}}
@@ -121,6 +121,15 @@ button{cursor:pointer}
   display:grid;place-items:center;background:rgba(17,17,19,.6);border:1px solid var(--line);color:var(--muted);opacity:.45;transition:opacity .2s,color .2s,border-color .2s;backdrop-filter:blur(6px)}
 .staff-btn:hover,.staff-btn:focus-visible{opacity:1;color:var(--gold);border-color:var(--orange);outline:none}
 .staff-btn .ic{font-size:20px}
+
+/* ===================== Credit ===================== */
+.credit{display:inline-flex;align-items:center;gap:9px;min-height:40px;padding:0 14px;border-radius:999px;margin-top:-.4cqh;
+  font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-decoration:none;
+  background:rgba(10,10,12,.6);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(6px);opacity:.8;
+  transition:opacity .2s,color .2s,border-color .2s,box-shadow .2s}
+.credit img{display:block;height:14px;width:auto}
+.credit:hover,.credit:focus-visible{opacity:1;color:var(--text);border-color:rgba(255,106,0,.6);box-shadow:0 0 18px rgba(255,106,0,.25);outline:none}
+.credit:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
 /* ===================== Dialogs (shared) ===================== */
 dialog{padding:0;border:0;background:transparent;color:var(--text);max-width:none;max-height:none}
@@ -412,6 +421,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
         <button class="spin-btn" id="spinBtn" type="button"><span id="spinIcon"></span><span id="spinLabel">SPIN TO WIN</span></button>
       </div>
       <p class="status" id="status" aria-live="polite"></p>
+      <a class="credit" href="https://coda-agency.net/" target="_blank" rel="noopener" aria-label="Powered and developed by CODA (opens in a new tab)">
+        <span aria-hidden="true">Powered &amp; developed by</span>
+        <img src="assets/coda-logo.png" alt="" width="48" height="14">
+      </a>
     </div>
   </main>
 </div>
@@ -420,6 +433,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <canvas id="fx" aria-hidden="true"></canvas>
 
 <button class="staff-btn" id="staffBtn" type="button" aria-label="Staff settings"><svg class="ic"><use href="#i-settings"/></svg></button>
+
 
 <!-- Result -->
 <dialog id="resultDlg" aria-labelledby="resTitle">
