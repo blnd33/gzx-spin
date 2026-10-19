@@ -1,0 +1,2054 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GZX Gaming · Spin &amp; Win</title>
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050505; --surface:#111113; --surface-2:#17171a; --surface-3:#202024;
+  --line:#2c2c31; --line-hot:rgba(255,106,0,.5);
+  --text:#F6F1EC; --muted:#A8A09A; --dim:#77706B;
+  --amber:#FFB300; --gold:#FFD166; --orange:#FF6A00; --red:#E8270C; --ember:#8E0E05;
+  --ok:#34D399; --warn:#FBBF24; --danger:#F87171;
+  --font-display:'Russo One','Arial Black',system-ui,sans-serif;
+  --font-body:'Chakra Petch','Segoe UI',system-ui,sans-serif;
+  --r-sm:8px; --r-md:12px; --r-lg:18px;
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:16px;line-height:1.5}
+body{overflow:hidden;-webkit-tap-highlight-color:transparent;display:grid;place-items:center;height:100dvh}
+body::before{content:'';position:fixed;inset:-12%;background:url(assets/gzx-poster.jpg) center/cover;filter:blur(50px) saturate(1.25);opacity:.26;z-index:-1;pointer-events:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ic{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ===================== Stage layout (portrait = poster) ===================== */
+.app{position:relative;width:min(100vw,calc(100dvh * 590 / 1280));aspect-ratio:590/1280}
+.poster{position:absolute;inset:0;background:url(assets/gzx-poster.jpg) center/100% 100% no-repeat;z-index:0}
+.legend{display:none}
+.arena{position:absolute;inset:36.5% 0 3.5%;z-index:2;container-type:size;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3cqh}
+#embers{position:fixed;inset:0;width:100vw;height:100dvh;z-index:1;pointer-events:none}
+#fx{position:fixed;inset:0;width:100vw;height:100dvh;z-index:40;pointer-events:none}
+.flash{position:fixed;inset:0;z-index:39;pointer-events:none;opacity:0;mix-blend-mode:screen;
+  background:radial-gradient(circle at var(--fx,50%) var(--fy,50%),rgba(255,244,210,.95) 0%,rgba(255,150,40,.55) 22%,rgba(232,39,12,.22) 45%,transparent 72%)}
+.rays{position:absolute;inset:-38%;border-radius:50%;pointer-events:none;opacity:0;
+  background:repeating-conic-gradient(from 0deg,var(--ray,rgba(255,200,90,.42)) 0deg 6deg,transparent 6deg 22.5deg);
+  -webkit-mask:radial-gradient(circle,#000 22%,transparent 68%);mask:radial-gradient(circle,#000 22%,transparent 68%)}
+
+@media (min-aspect-ratio:1001/1000){
+  body{display:block}
+  .app{width:100vw;height:100dvh;aspect-ratio:auto;display:grid;grid-template-columns:auto minmax(0,1fr)}
+  .poster{position:relative;inset:auto;height:100dvh;aspect-ratio:590/1280;container-type:size;box-shadow:40px 0 80px -30px #000}
+  .legend{display:flex}
+  .arena{position:relative;inset:auto;height:100dvh;gap:2.4cqh;
+    background:
+      radial-gradient(ellipse 55% 50% at 50% 44%,rgba(232,39,12,.20),transparent 70%),
+      radial-gradient(ellipse 70% 30% at 50% 108%,rgba(255,106,0,.32),transparent 70%)}
+}
+
+/* ===================== Prize legend (landscape) ===================== */
+.legend{position:absolute;inset:38.5% 11% 16.5%;flex-direction:column;gap:2.2cqh;z-index:2;overflow:hidden}
+.legend h2{margin:0;font:400 clamp(13px,4.4cqw,22px)/1 var(--font-display);letter-spacing:.14em;text-align:center;color:var(--gold);text-shadow:0 0 18px rgba(255,106,0,.6)}
+.legend-group{display:flex;flex-direction:column;gap:.9cqh}
+.tier-tag{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font:400 clamp(10px,2.8cqw,14px)/1 var(--font-display);letter-spacing:.12em;padding:5px 9px;color:var(--tt,#140700);background:var(--tc);clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+.legend ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.7cqh}
+.legend li{display:flex;align-items:center;gap:10px;font-weight:600;font-size:clamp(11px,3.3cqw,17px);line-height:1.25;color:var(--text)}
+.legend li .ic{font-size:1.2em;color:var(--lc,var(--tc))}
+
+/* ===================== Wheel ===================== */
+.wheel{position:relative;width:min(74cqh,88cqw);aspect-ratio:1;container-type:inline-size;flex:none}
+@media (min-aspect-ratio:1001/1000){.wheel{width:min(73cqh,86cqw)}}
+.wheel-glow{position:absolute;inset:-9%;border-radius:50%;background:radial-gradient(circle,rgba(255,106,0,.42) 0%,rgba(232,39,12,.18) 45%,transparent 68%);animation:breathe 3.2s ease-in-out infinite;pointer-events:none}
+.wheel.is-spinning .wheel-glow{animation-duration:.9s}
+@keyframes breathe{50%{opacity:.6;transform:scale(.97)}}
+.wheel-face{position:absolute;inset:6%;width:88%;height:88%;border-radius:50%;will-change:transform;transform:rotate(0deg)}
+.wheel-shade{position:absolute;inset:6%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 50% 22%,rgba(255,255,255,.13),transparent 42%),radial-gradient(circle,transparent 58%,rgba(0,0,0,.5) 100%)}
+.wheel-ring{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.bulb{fill:#4a1806}
+.ring[data-mode="idle"] .bulb{animation:blink 1.4s steps(1) infinite}
+.ring[data-mode="idle"] .bulb:nth-child(odd){animation-delay:-.7s}
+.ring[data-mode="spin"] .bulb{animation:chase .55s linear infinite;animation-delay:calc(var(--i) * -.55s / var(--n))}
+.ring[data-mode="win"] .bulb{animation:flash .3s steps(1) 8}
+@keyframes blink{0%{fill:#FFC94D}50%{fill:#5a1e08}}
+@keyframes chase{0%{fill:#FFF4CF}12%{fill:#FF9A2E}35%,100%{fill:#4a1806}}
+@keyframes flash{0%{fill:var(--win,#FFD166)}50%{fill:#3a1004}}
+.pointer{position:absolute;top:-4.2%;left:50%;width:9.5%;translate:-50% 0;transform-origin:50% 30%;z-index:3;
+  filter:drop-shadow(0 4px 5px rgba(0,0,0,.7)) drop-shadow(0 0 10px rgba(255,106,0,.7))}
+.hub{position:absolute;left:50%;top:50%;width:20%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;z-index:2;display:grid;place-items:center;cursor:pointer;user-select:none;
+  background:radial-gradient(circle at 35% 28%,#3d3d44,#141416 58%,#050505);
+  box-shadow:0 0 0 .6cqw #FF6A00,0 0 0 1.3cqw #1a0a04,0 0 4cqw rgba(255,106,0,.65),inset 0 .5cqw 1.2cqw rgba(255,255,255,.14);
+  transition:transform .2s var(--ease-out)}
+.hub span{font:400 5.6cqw/1 var(--font-display);letter-spacing:.02em;background:linear-gradient(180deg,#FFE29A 0%,#FF8A1F 52%,#C21807 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .3cqw .3cqw rgba(0,0,0,.6));max-width:90%;overflow:hidden;white-space:nowrap;text-align:center}
+.hub:hover{transform:scale(1.04)}
+.wheel.is-spinning .hub{cursor:default;transform:none}
+
+/* ===================== Spin CTA ===================== */
+.cta{display:flex;flex-direction:column;align-items:center;gap:1.4cqh;flex:none}
+.spin-wrap{filter:drop-shadow(0 0 16px rgba(255,106,0,.55)) drop-shadow(0 6px 10px rgba(0,0,0,.65));border-radius:4px;transition:filter .3s}
+.spin-wrap:has(.spin-btn:focus-visible){outline:3px solid var(--gold);outline-offset:5px}
+.spin-btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:12px;
+  height:clamp(52px,11cqh,74px);min-width:min(80cqw,400px);padding:0 30px;border:0;
+  font:400 clamp(18px,4.4cqh,28px)/1 var(--font-display);letter-spacing:.07em;color:#1A0700;
+  background:linear-gradient(180deg,#FFD166 0%,#FF8A1F 46%,#E8270C 100%);
+  clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
+  transition:transform .15s var(--ease-out),filter .2s}
+.spin-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 48%,transparent 66%);transform:translateX(-120%);animation:shine 3.6s ease-in-out infinite}
+@keyframes shine{0%,55%{transform:translateX(-120%)}85%,100%{transform:translateX(120%)}}
+.spin-btn:hover{filter:brightness(1.08) saturate(1.1)}
+.spin-btn:active{transform:scale(.97)}
+.spin-btn:focus-visible{outline:none}
+.spin-btn:disabled{cursor:default;filter:grayscale(.35) brightness(.8)}
+.spin-btn:disabled::after{animation:none;opacity:0}
+.spin-btn.is-locked{color:var(--text);background:linear-gradient(180deg,#2a2a30,#141416);box-shadow:inset 0 0 0 2px #FF6A00}
+.spin-btn.is-locked::after{opacity:.25}
+.spin-btn .ic{font-size:.9em}
+.status{margin:0;min-height:1.5em;font-weight:600;font-size:clamp(12px,2.5cqh,16px);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center;text-shadow:0 1px 2px #000;padding:0 12px}
+.status b{color:var(--gold);font-weight:700}
+
+/* ===================== Staff button ===================== */
+.staff-btn{position:fixed;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:30;width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(17,17,19,.6);border:1px solid var(--line);color:var(--muted);opacity:.45;transition:opacity .2s,color .2s,border-color .2s;backdrop-filter:blur(6px)}
+.staff-btn:hover,.staff-btn:focus-visible{opacity:1;color:var(--gold);border-color:var(--orange);outline:none}
+.staff-btn .ic{font-size:20px}
+
+/* ===================== Dialogs (shared) ===================== */
+dialog{padding:0;border:0;background:transparent;color:var(--text);max-width:none;max-height:none}
+dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
+dialog[open]{animation:pop .32s var(--ease-out)}
+dialog[open]::backdrop{animation:fade .25s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.96)}}
+@keyframes fade{from{opacity:0}}
+.card{background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface-3);font-weight:600;letter-spacing:.02em;transition:background .15s,border-color .15s,transform .1s,filter .15s;white-space:nowrap}
+.btn:hover{border-color:#45454c;background:#28282d}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn:focus-visible,.icon-btn:focus-visible,.tab:focus-visible,.key:focus-visible,.chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn-primary{background:linear-gradient(180deg,#FFB547,#FF6A00 60%,#E0400E);border-color:transparent;color:#1A0700;font-weight:700}
+.btn-primary:hover{background:linear-gradient(180deg,#FFC266,#FF7A14 60%,#E8501A);border-color:transparent;filter:brightness(1.04)}
+.btn-primary:disabled{filter:grayscale(.8) brightness(.6);opacity:1}
+.btn-ghost{background:transparent}
+.btn-danger{color:var(--danger);border-color:rgba(248,113,113,.35);background:transparent}
+.btn-danger:hover{background:rgba(248,113,113,.1);border-color:var(--danger)}
+.btn .ic{font-size:18px}
+.icon-btn{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;border:1px solid transparent;background:transparent;color:var(--muted);transition:background .15s,color .15s;flex:none}
+.icon-btn:hover{background:var(--surface-3);color:var(--text)}
+.icon-btn:disabled{opacity:.3;cursor:not-allowed;background:transparent}
+.icon-btn.danger:hover{color:var(--danger);background:rgba(248,113,113,.1)}
+.icon-btn .ic{font-size:20px}
+
+/* ===================== Result dialog ===================== */
+#resultDlg .card{width:min(420px,calc(100vw - 32px));padding:34px 26px 24px;text-align:center;position:relative;overflow:hidden;border-color:color-mix(in srgb,var(--tc) 55%,transparent);
+  background:radial-gradient(ellipse 90% 55% at 50% 0%,color-mix(in srgb,var(--tc) 26%,transparent),transparent 100%),linear-gradient(180deg,var(--surface-2),var(--surface));
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--tc) 30%,transparent),0 0 60px color-mix(in srgb,var(--tc) 35%,transparent),0 30px 80px rgba(0,0,0,.7)}
+.res-badge{position:relative;display:inline-block;font:400 14px/1 var(--font-display);letter-spacing:.18em;padding:8px 14px;color:var(--tt,#140700);background:var(--tc);clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.res-icon{position:relative;width:104px;height:104px;margin:22px auto 14px;border-radius:50%;display:grid;place-items:center;color:var(--tc);
+  background:radial-gradient(circle at 40% 30%,#2b2b31,#0b0b0c);box-shadow:0 0 0 3px var(--tc),0 0 34px color-mix(in srgb,var(--tc) 60%,transparent);animation:iconPop .6s var(--ease-spring) both .1s}
+.res-icon .ic{font-size:50px}
+@keyframes iconPop{from{transform:scale(.3) rotate(-30deg);opacity:0}}
+.res-kicker{position:relative;margin:0;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-size:13px}
+.res-title{position:relative;margin:6px 0 0;font:400 clamp(26px,7vw,34px)/1.15 var(--font-display);text-wrap:balance}
+.res-code{position:relative;margin:20px auto 6px;display:inline-flex;flex-direction:column;gap:2px;padding:10px 22px;border:1px dashed color-mix(in srgb,var(--tc) 60%,transparent);border-radius:10px;background:rgba(0,0,0,.35)}
+.res-code small{font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+.res-code strong{font:400 26px/1.1 var(--font-display);letter-spacing:.14em;color:var(--gold)}
+.res-note{position:relative;margin:10px 0 22px;color:var(--muted);font-size:15px;text-wrap:balance}
+#resultDlg .btn-primary{width:100%;min-height:54px;font:400 18px/1 var(--font-display);letter-spacing:.08em}
+
+/* ===================== PIN dialog ===================== */
+#pinDlg .card{width:min(360px,calc(100vw - 32px));padding:24px 22px 22px;text-align:center}
+.dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.dlg-head h2{margin:0;font:400 20px/1.2 var(--font-display);letter-spacing:.06em}
+.pin-sub{margin:0 0 16px;color:var(--muted);font-size:14px;text-align:left}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin:6px 0 8px;height:20px}
+.pin-dots i{width:16px;height:16px;border-radius:50%;border:2px solid #4a4a52;transition:background .15s,border-color .15s,transform .15s}
+.pin-dots i.on{background:var(--orange);border-color:var(--orange);transform:scale(1.1)}
+.pin-err{min-height:22px;margin:0 0 10px;color:var(--danger);font-size:14px;font-weight:600}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.key{height:60px;border-radius:12px;border:1px solid var(--line);background:var(--surface-3);font:600 22px/1 var(--font-body);display:grid;place-items:center;transition:background .12s,transform .08s}
+.key:hover{background:#2a2a30}
+.key:active{transform:scale(.94);background:#33333a}
+.key.fn{font-size:14px;color:var(--muted);background:transparent}
+.key .ic{font-size:22px}
+.grant{display:flex;flex-direction:column;gap:12px;text-align:left}
+.grant p{margin:0;color:var(--muted);font-size:15px}
+.grant-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grant-row .btn{min-height:64px;font:400 20px/1 var(--font-display)}
+.grant .btn-ghost{width:100%}
+
+/* ===================== Admin ===================== */
+#adminDlg{width:min(1240px,calc(100vw - 32px));height:min(920px,calc(100dvh - 32px))}
+#adminDlg .card{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden}
+.adm-head{display:flex;align-items:center;gap:14px;padding:16px 18px 10px 22px}
+.adm-head h2{margin:0;font:400 20px/1.2 var(--font-display);letter-spacing:.06em;flex:1}
+.adm-head h2 small{display:block;font:500 13px/1.3 var(--font-body);letter-spacing:.02em;color:var(--muted)}
+.tabs{display:flex;gap:4px;padding:0 18px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:0;background:transparent;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{color:var(--gold);border-bottom-color:var(--orange)}
+.tab .ic{font-size:18px}
+.adm-body{overflow:auto;padding:20px 22px;overscroll-behavior:contain}
+.adm-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--line);background:rgba(0,0,0,.25)}
+.adm-foot .msg{flex:1;min-width:200px;font-size:14px;color:var(--muted)}
+.adm-foot .msg.err{color:var(--danger);font-weight:600}
+.adm-foot .msg.warn{color:var(--warn);font-weight:600}
+
+.odds-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
+.summary{position:sticky;top:0;display:flex;flex-direction:column;gap:14px}
+.panel{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:var(--r-md);padding:16px}
+.panel h3{margin:0 0 12px;font:600 13px/1.2 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.panel > p{margin:0;color:var(--muted);font-size:14px}
+.preview-wrap{display:grid;place-items:center;position:relative}
+#previewCanvas{width:min(100%,220px);aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 6px #1a0a04,0 0 0 8px #FF6A00,0 0 30px rgba(255,106,0,.35)}
+.preview-pin{position:absolute;top:-6px;left:50%;translate:-50% 0;width:20px;color:var(--amber)}
+.meter{height:10px;border-radius:99px;background:#232327;overflow:hidden;display:flex}
+.meter > span{height:100%;transition:width .3s var(--ease-out)}
+.meter-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;font-weight:600}
+.meter-label .val{font:400 22px/1 var(--font-display)}
+.meter-label .val.bad{color:var(--danger)}
+.meter-label .val.good{color:var(--ok)}
+.hint{margin:8px 0 0;font-size:13.5px;color:var(--muted)}
+.hint.bad{color:var(--danger);font-weight:600}
+.split-legend{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.split-legend li{display:flex;align-items:center;gap:10px;font-size:14.5px}
+.split-legend .sw{width:12px;height:12px;border-radius:3px;background:var(--tc);flex:none}
+.split-legend .pct{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.quick .btn{font-size:14px;padding:0 10px}
+.warns{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.warns li{font-size:13.5px;display:flex;gap:8px;align-items:flex-start}
+.warns li.bad{color:var(--danger)}
+.warns li.warn{color:var(--warn)}
+.warns .ic{margin-top:3px}
+
+.list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.list-head h3{margin:0;font:600 13px/1.2 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.prize-list{display:flex;flex-direction:column;gap:12px}
+.prize-row{border:1px solid var(--line);border-left:4px solid var(--tc);border-radius:var(--r-md);background:rgba(0,0,0,.25);padding:14px 14px 14px 16px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s,opacity .2s}
+.prize-row:focus-within{border-color:#3d3d44;border-left-color:var(--tc)}
+.prize-row.is-off{opacity:.55}
+.prize-row.is-off:focus-within{opacity:.85}
+.row-top{display:flex;align-items:flex-end;gap:10px}
+.row-icon{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;flex:none;color:var(--tc);background:color-mix(in srgb,var(--tc) 12%,#0b0b0c);border:1px solid color-mix(in srgb,var(--tc) 35%,transparent)}
+.row-icon .ic{font-size:22px}
+.row-tools{display:flex;align-items:center;gap:2px;flex:none}
+.row-tools .switch{margin:0 8px 0 4px}
+.row-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld.grow{flex:1}
+.fld > span{font-size:12.5px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
+.fld input,.fld select,.fld textarea{height:44px;width:100%;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:#0b0b0d;font-size:16px;color:var(--text);font-family:inherit;transition:border-color .15s,box-shadow .15s}
+.fld select{padding-right:6px}
+.fld input:focus,.fld select:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,106,0,.22)}
+.fld input[aria-invalid="true"]{border-color:var(--danger)}
+.color-fld{display:flex;gap:6px}
+.color-fld input[type=color]{width:52px;flex:none;padding:4px;cursor:pointer}
+.color-fld .btn{min-height:44px;padding:0 10px;font-size:13px;flex:1}
+.row-odds{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper .lbl,.chance .lbl{font-size:12.5px;font-weight:600;letter-spacing:.04em;color:var(--muted);margin-right:4px}
+.stepper button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface-3);display:grid;place-items:center}
+.stepper button:hover{border-color:#4a4a52}
+.stepper button:disabled{opacity:.35;cursor:not-allowed}
+.stepper output{min-width:34px;text-align:center;font:400 20px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.chance{flex:1;min-width:260px;display:flex;align-items:center;gap:10px}
+.chance input[type=range]{flex:1;accent-color:var(--orange);height:44px;min-width:100px}
+.chance input[type=number]{width:84px;height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:#0b0b0d;font-size:16px;text-align:right}
+.chance input[type=number]:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,106,0,.22)}
+.pct-out{min-width:74px;text-align:right;font:400 20px/1 var(--font-display);color:var(--tc);font-variant-numeric:tabular-nums}
+.pct-out small{display:block;font:500 11.5px/1.3 var(--font-body);color:var(--muted);letter-spacing:.02em}
+
+/* wheel editor */
+.wheel-edit{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
+.edit-stage{display:grid;place-items:center;padding:26px 10px 10px;position:relative}
+.edit-holder{position:relative;width:min(100%,500px,52dvh)}
+#editCanvas{display:block;width:100%;aspect-ratio:1;border-radius:50%;cursor:pointer;box-shadow:0 0 0 8px #1a0a04,0 0 0 11px #FF6A00,0 0 40px rgba(255,106,0,.35)}
+#editCanvas:focus-visible{outline:3px solid var(--gold);outline-offset:14px}
+.edit-pin{position:absolute;top:-22px;left:50%;translate:-50% 0;width:34px;color:var(--amber);filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
+.edit-note{margin:14px 0 0;text-align:center;color:var(--muted);font-size:14px}
+.side-stack{display:flex;flex-direction:column;gap:14px}
+.big-num{font:400 34px/1 var(--font-display)}
+.inline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface-3);display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;transition:border-color .15s,background .15s}
+.chip .ic{color:var(--tc);font-size:18px}
+.chip:hover{border-color:#4a4a52}
+.chip[aria-pressed="true"]{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 16%,#151517);box-shadow:inset 0 0 0 1px var(--tc)}
+.slot-title{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.slot-title .sw{width:14px;height:14px;border-radius:4px;background:var(--tc)}
+.slot-title strong{font:400 18px/1.2 var(--font-display)}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn-grid .btn{font-size:14px;padding:0 10px}
+
+/* look & text */
+.tier-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:18px}
+.tier-card{border-top:4px solid var(--tc)}
+.tier-card .fld + .fld{margin-top:10px}
+.tier-sample{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.text-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px 16px}
+.sec-title{margin:6px 0 12px;font:600 13px/1.2 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.set-item{display:flex;flex-direction:column;gap:10px}
+.set-item p{margin:0;color:var(--muted);font-size:14px}
+.switch-row{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:44px}
+.switch-row label{font-weight:600}
+.switch{appearance:none;width:52px;height:30px;border-radius:99px;background:#34343a;position:relative;cursor:pointer;transition:background .2s;flex:none;margin:0}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .25s var(--ease-spring)}
+.switch:checked{background:var(--orange)}
+.switch:checked::after{transform:translateX(22px)}
+.switch:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.range-row{display:flex;align-items:center;gap:12px}
+.range-row input{flex:1;accent-color:var(--orange);height:44px}
+.range-row output{min-width:56px;text-align:right;font:400 20px/1 var(--font-display)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{padding:14px 16px;border:1px solid var(--line);border-radius:var(--r-md);background:rgba(0,0,0,.28)}
+.kpi small{display:block;font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi strong{font:400 28px/1.2 var(--font-display)}
+.hist-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid #1f1f23;vertical-align:middle}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--tc);margin-right:8px;vertical-align:middle}
+.code{font-family:var(--font-display);letter-spacing:.08em;color:var(--gold)}
+.claim-btn{min-height:36px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--muted)}
+.claim-btn.done{color:var(--ok);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+.hist-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.hist-tools .fld{flex:1;min-width:180px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom,0px));translate:-50% 0;z-index:100;padding:12px 18px;border-radius:12px;background:#1b1b1f;border:1px solid var(--line-hot);font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;gap:10px;align-items:center;opacity:0;transform:translateY(12px);transition:opacity .25s,transform .25s var(--ease-out);pointer-events:none}
+.toast.show{opacity:1;transform:none}
+.toast .ic{color:var(--ok);font-size:18px}
+
+.prize-list{container-type:inline-size}
+@container (max-width:820px){ .row-grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@container (max-width:480px){ .row-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:980px){
+  .odds-layout,.wheel-edit{grid-template-columns:1fr}
+  .summary{position:static;order:-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  #previewCanvas{width:min(100%,180px)}
+  .hist-grid{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  #adminDlg{width:100vw;height:100dvh}
+  #adminDlg .card{border-radius:0}
+  .adm-body{padding:16px}
+  .adm-foot{padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+  .chance{min-width:100%}
+  .row-top{flex-wrap:wrap}
+  .row-top .fld.grow{flex-basis:calc(100% - 60px)}
+  .row-tools{width:100%;justify-content:flex-end}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="sprite"></defs></svg>
+
+<canvas id="embers" aria-hidden="true"></canvas>
+
+<div class="app">
+  <aside class="poster" aria-label="GZX Gaming">
+    <div class="legend" id="legend"></div>
+  </aside>
+
+  <main class="arena">
+    <h1 class="sr-only">GZX Gaming Spin and Win</h1>
+    <div class="wheel" id="wheel">
+      <div class="rays" id="rays"></div>
+      <div class="wheel-glow"></div>
+      <canvas class="wheel-face" id="wheelCanvas" role="img" aria-label="Prize wheel"></canvas>
+      <div class="wheel-shade"></div>
+      <svg class="wheel-ring ring" id="ring" data-mode="idle" viewBox="0 0 1000 1000" aria-hidden="true">
+        <defs>
+          <linearGradient id="ringMetal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3a3a40"/><stop offset=".35" stop-color="#121214"/>
+            <stop offset=".6" stop-color="#2a1a14"/><stop offset="1" stop-color="#0a0a0b"/>
+          </linearGradient>
+          <filter id="bulbGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="500" cy="500" r="470" fill="none" stroke="url(#ringMetal)" stroke-width="60"/>
+        <circle cx="500" cy="500" r="441" fill="none" stroke="#FF6A00" stroke-width="4"/>
+        <circle cx="500" cy="500" r="497" fill="none" stroke="#8E0E05" stroke-width="5"/>
+        <circle cx="500" cy="500" r="494" fill="none" stroke="#FF6A00" stroke-opacity=".35" stroke-width="2"/>
+        <g id="bulbs" filter="url(#bulbGlow)"></g>
+      </svg>
+      <svg class="pointer" id="pointer" viewBox="0 0 60 84" aria-hidden="true">
+        <defs>
+          <linearGradient id="ptrGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFE29A"/><stop offset=".5" stop-color="#FF8A1F"/><stop offset="1" stop-color="#C21807"/>
+          </linearGradient>
+        </defs>
+        <path d="M30 82 C22 64 6 46 6 30 A24 24 0 0 1 54 30 C54 46 38 64 30 82Z" fill="url(#ptrGrad)" stroke="#1a0a04" stroke-width="3"/>
+        <path d="M30 70 C25 58 14 45 14 31" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="30" cy="30" r="9" fill="#1a0a04" stroke="#FFB300" stroke-width="3"/>
+      </svg>
+      <div class="hub" id="hub" aria-hidden="true"><span id="hubText">GZX</span></div>
+    </div>
+
+    <div class="cta">
+      <div class="spin-wrap">
+        <button class="spin-btn" id="spinBtn" type="button"><span id="spinIcon"></span><span id="spinLabel">SPIN TO WIN</span></button>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+    </div>
+  </main>
+</div>
+
+<div class="flash" id="flash" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<button class="staff-btn" id="staffBtn" type="button" aria-label="Staff settings"><svg class="ic"><use href="#i-settings"/></svg></button>
+
+<!-- Result -->
+<dialog id="resultDlg" aria-labelledby="resTitle">
+  <div class="card" id="resCard">
+    <span class="res-badge" id="resBadge"></span>
+    <div class="res-icon" id="resIcon"></div>
+    <p class="res-kicker" id="resKicker"></p>
+    <h2 class="res-title" id="resTitle"></h2>
+    <div class="res-code" id="resCode"><small>Claim code</small><strong id="resCodeVal"></strong></div>
+    <p class="res-note" id="resNote"></p>
+    <button class="btn btn-primary" id="resBtn" type="button">COLLECT</button>
+  </div>
+</dialog>
+
+<!-- PIN -->
+<dialog id="pinDlg" aria-labelledby="pinTitle">
+  <div class="card">
+    <div class="dlg-head">
+      <h2 id="pinTitle">Staff access</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div id="pinView">
+      <p class="pin-sub" id="pinSub">Enter the staff PIN to continue.</p>
+      <div class="pin-dots" id="pinDots" aria-hidden="true"></div>
+      <p class="pin-err" id="pinErr" role="alert"></p>
+      <div class="keypad" id="keypad"></div>
+    </div>
+    <div id="grantView" class="grant" hidden>
+      <p>How many spins should this player get? <span id="grantNow"></span></p>
+      <div class="grant-row">
+        <button class="btn btn-primary" type="button" data-grant="1">+1</button>
+        <button class="btn" type="button" data-grant="2">+2</button>
+        <button class="btn" type="button" data-grant="3">+3</button>
+      </div>
+      <button class="btn btn-ghost" type="button" id="grantAdmin"><svg class="ic"><use href="#i-settings"/></svg>Open admin panel</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Admin -->
+<dialog id="adminDlg" aria-labelledby="admTitle">
+  <div class="card">
+    <header class="adm-head">
+      <h2 id="admTitle">Admin panel<small>Full control of prizes, the wheel, looks and text. Changes go live when you save.</small></h2>
+      <button class="icon-btn" type="button" id="admClose" aria-label="Close admin"><svg class="ic"><use href="#i-x"/></svg></button>
+    </header>
+    <nav class="tabs" role="tablist" aria-label="Admin sections">
+      <button class="tab" role="tab" id="tab-odds" aria-controls="pane-odds" aria-selected="true" data-tab="odds"><svg class="ic"><use href="#i-sliders"/></svg>Prizes &amp; odds</button>
+      <button class="tab" role="tab" id="tab-wheel" aria-controls="pane-wheel" aria-selected="false" data-tab="wheel" tabindex="-1"><svg class="ic"><use href="#i-disc"/></svg>Wheel slices</button>
+      <button class="tab" role="tab" id="tab-look" aria-controls="pane-look" aria-selected="false" data-tab="look" tabindex="-1"><svg class="ic"><use href="#i-palette"/></svg>Look &amp; text</button>
+      <button class="tab" role="tab" id="tab-settings" aria-controls="pane-settings" aria-selected="false" data-tab="settings" tabindex="-1"><svg class="ic"><use href="#i-settings"/></svg>Settings</button>
+      <button class="tab" role="tab" id="tab-history" aria-controls="pane-history" aria-selected="false" data-tab="history" tabindex="-1"><svg class="ic"><use href="#i-history"/></svg>History &amp; claims</button>
+    </nav>
+    <div class="adm-body">
+      <!-- PRIZES -->
+      <section id="pane-odds" role="tabpanel" aria-labelledby="tab-odds">
+        <div class="odds-layout">
+          <div>
+            <div class="list-head">
+              <h3>Prizes</h3>
+              <button class="btn" type="button" id="addPrize"><svg class="ic"><use href="#i-plus"/></svg>Add prize</button>
+            </div>
+            <div class="prize-list" id="prizeList"></div>
+          </div>
+          <aside class="summary">
+            <div class="panel">
+              <h3>Live preview</h3>
+              <div class="preview-wrap">
+                <canvas id="previewCanvas" width="480" height="480" aria-label="Wheel preview"></canvas>
+                <svg class="preview-pin" viewBox="0 0 60 84" aria-hidden="true"><path d="M30 82 C22 64 6 46 6 30 A24 24 0 0 1 54 30 C54 46 38 64 30 82Z" fill="currentColor" stroke="#1a0a04" stroke-width="4"/></svg>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="meter-label"><span>Slices on the wheel</span><span class="val" id="sliceVal">24</span></div>
+              <div class="meter" id="sliceMeter"></div>
+              <p class="hint" id="sliceHint"></p>
+            </div>
+            <div class="panel">
+              <div class="meter-label"><span>Real chance by group</span><span class="val" id="winVal"></span></div>
+              <div class="meter" id="splitMeter"></div>
+              <ul class="split-legend" id="splitLegend"></ul>
+              <p class="hint" id="winHint"></p>
+            </div>
+            <div class="panel">
+              <h3>Quick tools</h3>
+              <div class="quick">
+                <button class="btn" type="button" id="normalize" title="Scale all chances so they add up to 100">Total = 100</button>
+                <button class="btn" type="button" id="matchSlices" title="Each prize's chance equals its share of the wheel">Odds = slice size</button>
+              </div>
+            </div>
+            <div class="panel" id="warnPanel" hidden>
+              <h3>Check these</h3>
+              <ul class="warns" id="warnList"></ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- WHEEL -->
+      <section id="pane-wheel" role="tabpanel" aria-labelledby="tab-wheel" hidden>
+        <div class="wheel-edit">
+          <div class="panel">
+            <div class="edit-stage">
+              <div class="edit-holder">
+                <canvas id="editCanvas" width="1000" height="1000" tabindex="0" aria-label="Wheel editor. Click a slice to select it, or use the arrow keys."></canvas>
+                <svg class="edit-pin" viewBox="0 0 60 84" aria-hidden="true"><path d="M30 82 C22 64 6 46 6 30 A24 24 0 0 1 54 30 C54 46 38 64 30 82Z" fill="currentColor" stroke="#1a0a04" stroke-width="4"/></svg>
+              </div>
+            </div>
+            <p class="edit-note">Click any slice to select it. Arrow keys move the selection.</p>
+          </div>
+          <div class="side-stack">
+            <div class="panel">
+              <h3>Wheel size</h3>
+              <div class="inline" style="justify-content:space-between">
+                <div><span class="big-num" id="wheelCount">24</span> <span style="color:var(--muted)">slices</span></div>
+                <span style="color:var(--muted);font-size:14px">Min 2 · Max 60</span>
+              </div>
+              <div class="switch-row" style="margin-top:10px">
+                <label for="autoArrange">Auto-spread prizes evenly</label>
+                <input type="checkbox" class="switch" id="autoArrange" role="switch">
+              </div>
+              <p class="hint" id="arrangeHint"></p>
+              <div class="btn-grid" style="margin-top:12px">
+                <button class="btn" type="button" id="shuffleSlices"><svg class="ic"><use href="#i-shuffle"/></svg>Shuffle</button>
+                <button class="btn" type="button" id="spreadSlices"><svg class="ic"><use href="#i-disc"/></svg>Spread evenly</button>
+              </div>
+            </div>
+            <div class="panel" id="slotPanel">
+              <div class="slot-title" id="slotTitle"></div>
+              <h3>Change this slice to</h3>
+              <div class="chip-grid" id="slotChips"></div>
+              <h3 style="margin-top:16px">Edit slice</h3>
+              <div class="btn-grid">
+                <button class="btn" type="button" id="slotLeft"><svg class="ic"><use href="#i-left"/></svg>Move left</button>
+                <button class="btn" type="button" id="slotRight">Move right<svg class="ic"><use href="#i-right"/></svg></button>
+                <button class="btn" type="button" id="slotAdd"><svg class="ic"><use href="#i-plus"/></svg>Add slice</button>
+                <button class="btn btn-danger" type="button" id="slotDel"><svg class="ic"><use href="#i-trash"/></svg>Delete slice</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOOK & TEXT -->
+      <section id="pane-look" role="tabpanel" aria-labelledby="tab-look" hidden>
+        <h3 class="sec-title">Odds groups</h3>
+        <div class="tier-cards" id="tierCards"></div>
+        <h3 class="sec-title">Screen text</h3>
+        <div class="panel">
+          <div class="text-grid" id="textFields"></div>
+          <div class="switch-row" style="margin-top:14px">
+            <label for="setLegend">Show the prize list beside the wheel on wide screens</label>
+            <input type="checkbox" class="switch" id="setLegend" role="switch">
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="pane-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+        <div class="set-grid">
+          <div class="panel set-item">
+            <h3>Spin feel</h3>
+            <label for="setDuration" style="font-weight:600">Spin length</label>
+            <div class="range-row"><input type="range" id="setDuration" min="3" max="14" step="0.5"><output id="setDurationOut" for="setDuration"></output></div>
+            <p>Longer spins build more suspense. Players with reduced motion turned on always get a short spin.</p>
+            <div class="switch-row"><label for="setSound">Sound effects</label><input type="checkbox" class="switch" id="setSound" role="switch"></div>
+          </div>
+          <div class="panel set-item">
+            <h3>Spin control</h3>
+            <div class="switch-row"><label for="setLock">Staff must unlock each spin</label><input type="checkbox" class="switch" id="setLock" role="switch"></div>
+            <p>When on, the wheel locks after every spin. Staff tap the button, enter the PIN and give the player spins after their hour.</p>
+            <div class="switch-row">
+              <span style="font-weight:600">Spins available now</span>
+              <div class="stepper">
+                <button type="button" id="credDec" aria-label="Remove a spin"><svg class="ic"><use href="#i-minus"/></svg></button>
+                <output id="credVal">0</output>
+                <button type="button" id="credInc" aria-label="Add a spin"><svg class="ic"><use href="#i-plus"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="panel set-item">
+            <h3>Staff PIN</h3>
+            <label class="fld"><span>New PIN (4–6 digits)</span><input type="password" inputmode="numeric" autocomplete="new-password" id="pinNew" maxlength="6" placeholder="Leave blank to keep current"></label>
+            <label class="fld"><span>Confirm new PIN</span><input type="password" inputmode="numeric" autocomplete="new-password" id="pinConfirm" maxlength="6"></label>
+            <p id="pinMsg">The PIN protects this panel on the lounge screen.</p>
+          </div>
+          <div class="panel set-item">
+            <h3>Backup</h3>
+            <p>Save every prize, slice, color and text to a file, or load one back. Useful before big changes or to copy the setup to another screen. The PIN is not included.</p>
+            <div class="btn-grid">
+              <button class="btn" type="button" id="exportCfg"><svg class="ic"><use href="#i-download"/></svg>Download backup</button>
+              <button class="btn" type="button" id="importCfg"><svg class="ic"><use href="#i-upload"/></svg>Load backup</button>
+            </div>
+            <input type="file" id="importFile" accept="application/json,.json" hidden>
+          </div>
+          <div class="panel set-item">
+            <h3>Screen</h3>
+            <p>Run the wheel full screen on the lounge display.</p>
+            <button class="btn" type="button" id="fullscreen"><svg class="ic"><use href="#i-expand"/></svg>Enter full screen</button>
+          </div>
+          <div class="panel set-item">
+            <h3>Reset</h3>
+            <p>Restore the original 10 prizes, 24 slices, colors and text. History and PIN are kept.</p>
+            <button class="btn btn-danger" type="button" id="resetDefaults"><svg class="ic"><use href="#i-retry"/></svg>Restore defaults</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- HISTORY -->
+      <section id="pane-history" role="tabpanel" aria-labelledby="tab-history" hidden>
+        <div class="kpis" id="kpis"></div>
+        <div class="hist-grid">
+          <div class="panel">
+            <h3>Expected vs. actual</h3>
+            <div class="tbl-wrap"><table id="statTable"></table></div>
+          </div>
+          <div class="panel">
+            <h3>Recent spins</h3>
+            <div class="hist-tools">
+              <label class="fld"><span>Find a claim code</span><input type="search" id="codeSearch" placeholder="e.g. GZX-7K2Q" autocomplete="off"></label>
+              <button class="btn" type="button" id="exportCsv"><svg class="ic"><use href="#i-download"/></svg>Export CSV</button>
+              <button class="btn btn-danger" type="button" id="clearHist"><svg class="ic"><use href="#i-trash"/></svg>Clear</button>
+            </div>
+            <div class="tbl-wrap"><table id="histTable"></table></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <footer class="adm-foot">
+      <span class="msg" id="footMsg" role="status"></span>
+      <span id="footActions" style="display:flex;gap:10px;flex-wrap:wrap"></span>
+    </footer>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status"><svg class="ic"><use href="#i-check"/></svg><span id="toastMsg"></span></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ------------------------------------------------------------------ constants */
+const MIN_SLICES = 2, MAX_SLICES = 60;
+const STORE_KEY = 'gzx-spinner-v1';
+
+// Prize icons (Lucide, 24×24 stroke paths) — used on the wheel canvas and in the UI.
+const ICONS = {
+  gamepad: { label: 'Gamepad', d: ['M6 11h4', 'M8 9v4', 'M15 12h.01', 'M18 10h.01', 'M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z'] },
+  timer:   { label: 'Timer', d: ['M10 2h4', 'M12 14l3-3', 'M20 14a8 8 0 1 1-16 0a8 8 0 1 1 16 0'] },
+  wine:    { label: 'Premium drink', d: ['M8 22h8', 'M7 10h10', 'M12 15v7', 'M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z'] },
+  zap:     { label: 'Energy', d: ['M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z'] },
+  cookie:  { label: 'Snack', d: ['M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5', 'M8.5 8.5v.01', 'M16 15.5v.01', 'M12 12v.01', 'M11 17v.01', 'M7 14v.01'] },
+  cup:     { label: 'Drink', d: ['M6 8l1.75 12.25A2 2 0 0 0 9.74 22h4.52a2 2 0 0 0 1.99-1.75L18 8', 'M5 8h14', 'M7 15a6.47 6.47 0 0 1 5 0 6.47 6.47 0 0 0 5 0', 'M12 8l1-6h2'] },
+  pizza:   { label: 'Food', d: ['M15 11h.01', 'M11 15h.01', 'M16 16h.01', 'M2 16l20 6-6-20A20 20 0 0 0 2 16', 'M5.71 17.11a17.04 17.04 0 0 1 11.4-11.4'] },
+  crown:   { label: 'Crown', d: ['M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z', 'M5 21h14'] },
+  trophy:  { label: 'Trophy', d: ['M6 9H4.5a2.5 2.5 0 0 1 0-5H6', 'M18 9h1.5a2.5 2.5 0 0 0 0-5H18', 'M4 22h16', 'M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22', 'M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22', 'M18 2H6v7a6 6 0 0 0 12 0V2Z'] },
+  star:    { label: 'Star', d: ['M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z'] },
+  ticket:  { label: 'Ticket', d: ['M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z', 'M13 5v2', 'M13 17v2', 'M13 11v2'] },
+  gift:    { label: 'Gift', d: ['M20 12v10H4V12', 'M2 7h20v5H2z', 'M12 22V7', 'M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z', 'M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z'] },
+  retry:   { label: 'Try again', d: ['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5'] },
+};
+const UI_ICONS = {
+  settings: ['M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z', 'M15 12a3 3 0 1 1-6 0a3 3 0 1 1 6 0'],
+  lock: ['M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z', 'M7 11V7a5 5 0 0 1 10 0v4'],
+  x: ['M18 6 6 18', 'M6 6l12 12'],
+  plus: ['M5 12h14', 'M12 5v14'],
+  minus: ['M5 12h14'],
+  trash: ['M3 6h18', 'M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6', 'M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2'],
+  back: ['M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z', 'M12 9l6 6', 'M18 9l-6 6'],
+  check: ['M20 6 9 17l-5-5'],
+  download: ['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M7 10l5 5 5-5', 'M12 15V3'],
+  upload: ['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M17 8l-5-5-5 5', 'M12 3v12'],
+  history: ['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5', 'M12 7v5l4 2'],
+  sliders: ['M4 21v-7', 'M4 10V3', 'M12 21v-9', 'M12 8V3', 'M20 21v-5', 'M20 12V3', 'M2 14h4', 'M10 8h4', 'M18 16h4'],
+  alert: ['M21.73 18l-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3', 'M12 9v4', 'M12 17h.01'],
+  expand: ['M15 3h6v6', 'M9 21H3v-6', 'M21 3l-7 7', 'M3 21l7-7'],
+  copy: ['M10 8h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z', 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2'],
+  up: ['M18 15l-6-6-6 6'],
+  down: ['M6 9l6 6 6-6'],
+  left: ['M15 18l-6-6 6-6'],
+  right: ['M9 18l6-6-6-6'],
+  shuffle: ['M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22', 'M18 2l4 4-4 4', 'M2 6h1.9c1.5 0 2.9.9 3.6 2.2', 'M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8', 'M18 14l4 4-4 4'],
+  disc: ['M22 12a10 10 0 1 1-20 0a10 10 0 1 1 20 0', 'M14 12a2 2 0 1 1-4 0a2 2 0 1 1 4 0'],
+  palette: ['M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z', 'M13.5 6.5h.01', 'M17.5 10.5h.01', 'M6.5 12.5h.01', 'M8.5 7.5h.01'],
+};
+
+const TIER_ORDER = ['low', 'medium', 'high'];
+const TIER_NAMES = { low: 'Low odds', medium: 'Medium odds', high: 'High odds' };
+const DEFAULT_TIERS = {
+  low:    { badge: 'JACKPOT', color: '#FFB300', kicker: 'Legendary pull!', style: 'bright' },
+  medium: { badge: 'BIG WIN', color: '#FF6A00', kicker: 'Big win!',        style: 'bright' },
+  high:   { badge: 'WIN',     color: '#E8270C', kicker: 'You won!',        style: 'dark' },
+};
+const DEFAULT_TEXTS = {
+  spin: 'SPIN TO WIN',
+  status: 'Play 1 hour · Earn a spin · Win prizes',
+  locked: 'ASK STAFF TO UNLOCK',
+  hub: 'GZX',
+  legend: 'PRIZE POOL',
+  winNote: 'Show this screen to staff at the counter to claim your prize.',
+  noneTitle: 'Try again next time',
+  noneNote: 'No prize this spin. Play another hour to earn your next spin.',
+};
+const TEXT_FIELDS = [
+  ['spin', 'Spin button', 22], ['locked', 'Button when locked', 26], ['status', 'Line under the button', 60],
+  ['hub', 'Wheel center', 5], ['legend', 'Prize list title', 20], ['winNote', 'Message on a win', 120],
+  ['noneTitle', 'Headline on “no prize”', 40], ['noneNote', 'Message on “no prize”', 120],
+];
+const DEFAULT_PRIZES = [
+  { id: 'p-2h',   name: '2 Hours of Gaming',    line1: '2 HOURS',  line2: 'GAMING', icon: 'gamepad', tier: 'low',    kind: 'prize', slices: 1, weight: 2,  color: '', enabled: true },
+  { id: 'p-prem', name: 'Premium Drink',        line1: 'PREMIUM',  line2: 'DRINK',  icon: 'wine',    tier: 'low',    kind: 'prize', slices: 1, weight: 2,  color: '', enabled: true },
+  { id: 'p-2en',  name: '2 Energy Drinks',      line1: '2 ENERGY', line2: 'DRINKS', icon: 'zap',     tier: 'low',    kind: 'prize', slices: 1, weight: 2,  color: '', enabled: true },
+  { id: 'p-1h',   name: '1 Hour of Gaming',     line1: '1 HOUR',   line2: 'GAMING', icon: 'gamepad', tier: 'medium', kind: 'prize', slices: 2, weight: 8,  color: '', enabled: true },
+  { id: 'p-en',   name: '1 Energy Drink',       line1: 'ENERGY',   line2: 'DRINK',  icon: 'zap',     tier: 'medium', kind: 'prize', slices: 2, weight: 8,  color: '', enabled: true },
+  { id: 'p-2sn',  name: '2 Snacks',             line1: '2 SNACKS', line2: '',       icon: 'cookie',  tier: 'medium', kind: 'prize', slices: 2, weight: 8,  color: '', enabled: true },
+  { id: 'p-try',  name: 'Try Again',            line1: 'TRY',      line2: 'AGAIN',  icon: 'retry',   tier: 'high',   kind: 'none',  slices: 6, weight: 28, color: '', enabled: true },
+  { id: 'p-30',   name: '30 Minutes of Gaming', line1: '30 MIN',   line2: 'GAMING', icon: 'timer',   tier: 'high',   kind: 'prize', slices: 3, weight: 14, color: '', enabled: true },
+  { id: 'p-sn',   name: '1 Snack',              line1: '1 SNACK',  line2: '',       icon: 'cookie',  tier: 'high',   kind: 'prize', slices: 3, weight: 14, color: '', enabled: true },
+  { id: 'p-dr',   name: '1 Regular Drink',      line1: 'REGULAR',  line2: 'DRINK',  icon: 'cup',     tier: 'high',   kind: 'prize', slices: 3, weight: 14, color: '', enabled: true },
+];
+const DEFAULT_SETTINGS = { duration: 7, sound: true, lock: false, pin: '1234', showLegend: true };
+
+/* ------------------------------------------------------------------ helpers */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const icon = (name, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const reducedMQ = matchMedia('(prefers-reduced-motion: reduce)');
+const reduced = () => reducedMQ.matches;
+const rand = () => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296; };
+const sum = (arr, f) => arr.reduce((t, x) => t + f(x), 0);
+const pct1 = v => v.toFixed(1) + '%';
+const uid = () => 'p-' + Math.random().toString(36).slice(2, 8);
+const isOn = p => p.enabled !== false;
+const HEX = /^#[0-9a-f]{6}$/i;
+
+function rgb(hex) { const n = parseInt(hex.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function hex(r, g, b) { return '#' + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join(''); }
+function mix(a, b, t) { const A = rgb(a), B = rgb(b); return hex(A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t); }
+function lum(h) { const c = rgb(h).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; }
+const inkOn = h => lum(h) > .4 ? '#140700' : '#FFF6EE';
+
+// Build the SVG sprite once from the icon tables.
+(function buildSprite() {
+  const all = { ...Object.fromEntries(Object.entries(ICONS).map(([k, v]) => [k, v.d])), ...UI_ICONS };
+  $('#sprite').innerHTML = Object.entries(all).map(([k, ds]) =>
+    `<symbol id="i-${k}" viewBox="0 0 24 24">${ds.map(d => `<path d="${d}"/>`).join('')}</symbol>`).join('');
+})();
+const ICON_PATHS = Object.fromEntries(Object.entries(ICONS).map(([k, v]) => [k, v.d.map(d => new Path2D(d))]));
+
+/* ------------------------------------------------------------------ state */
+function defaults() {
+  return {
+    v: 2, prizes: clone(DEFAULT_PRIZES), tiers: clone(DEFAULT_TIERS), texts: { ...DEFAULT_TEXTS },
+    wheel: { mode: 'auto', slots: [] }, settings: { ...DEFAULT_SETTINGS }, credits: 0, history: [],
+  };
+}
+// Fill in anything missing so older saves and imported backups keep working.
+function normalizeConfig(s) {
+  const d = defaults();
+  const out = {};
+  out.prizes = Array.isArray(s.prizes) && s.prizes.length ? s.prizes.map(p => ({
+    id: String(p.id || uid()), name: String(p.name ?? 'Prize'), line1: String(p.line1 ?? 'PRIZE').toUpperCase(), line2: String(p.line2 ?? '').toUpperCase(),
+    icon: ICONS[p.icon] ? p.icon : 'gift', tier: TIER_ORDER.includes(p.tier) ? p.tier : 'high',
+    kind: ['prize', 'none', 'respin'].includes(p.kind) ? p.kind : 'prize',
+    slices: Math.max(0, Math.min(MAX_SLICES, Math.round(Number(p.slices) || 0))), weight: Math.max(0, Number(p.weight) || 0),
+    color: HEX.test(p.color || '') ? p.color : '', enabled: p.enabled !== false,
+  })) : d.prizes;
+  out.tiers = {};
+  TIER_ORDER.forEach(t => {
+    const src = (s.tiers || {})[t] || {};
+    out.tiers[t] = { ...d.tiers[t], ...src, color: HEX.test(src.color || '') ? src.color : d.tiers[t].color, style: src.style === 'dark' || src.style === 'bright' ? src.style : d.tiers[t].style };
+  });
+  out.texts = { ...d.texts, ...(s.texts || {}) };
+  const w = s.wheel || {};
+  const ids = new Set(out.prizes.map(p => p.id));
+  out.wheel = { mode: w.mode === 'manual' ? 'manual' : 'auto', slots: Array.isArray(w.slots) ? w.slots.filter(id => ids.has(id)).slice(0, MAX_SLICES) : [] };
+  if (out.wheel.mode === 'manual' && out.wheel.slots.length < MIN_SLICES) out.wheel = { mode: 'auto', slots: [] };
+  out.settings = { ...d.settings, ...(s.settings || {}) };
+  syncCounts(out);
+  if (slotsFor(out).length < MIN_SLICES) return { ...d, settings: out.settings };
+  return out;
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      const cfg = normalizeConfig(s);
+      return { v: 2, ...cfg, credits: Number.isFinite(s.credits) ? s.credits : 0, history: Array.isArray(s.history) ? s.history : [] };
+    }
+  } catch { /* storage blocked or corrupt — fall back to defaults */ }
+  return defaults();
+}
+function persist() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { /* ignore */ }
+}
+
+/* Spread each prize's slices evenly around the wheel, then nudge apart any neighbours that match. */
+function buildLayout(prizes) {
+  const items = [];
+  const list = prizes.filter(p => p.slices > 0).sort((a, b) => b.slices - a.slices || a.id.localeCompare(b.id));
+  const n = sum(list, p => p.slices);
+  if (!n) return [];
+  list.forEach((p, pi) => {
+    const gap = n / p.slices;
+    const off = ((pi * 0.61803398875) % 1) * gap;
+    for (let k = 0; k < p.slices; k++) items.push({ id: p.id, pos: (off + k * gap) % n, pi });
+  });
+  items.sort((a, b) => a.pos - b.pos || a.pi - b.pi);
+  const slots = items.map(i => i.id);
+  const dups = () => { let c = 0; for (let i = 0; i < slots.length; i++) if (slots[i] === slots[(i + 1) % slots.length]) c++; return c; };
+  let cur = dups();
+  for (let pass = 0; pass < 6 && cur > 0; pass++) {
+    for (let i = 0; i < slots.length && cur > 0; i++) {
+      if (slots[i] !== slots[(i + 1) % slots.length]) continue;
+      for (let j = 0; j < slots.length; j++) {
+        if (slots[j] === slots[i]) continue;
+        [slots[i], slots[j]] = [slots[j], slots[i]];
+        const next = dups();
+        if (next < cur) { cur = next; break; }
+        [slots[i], slots[j]] = [slots[j], slots[i]];
+      }
+    }
+  }
+  return slots;
+}
+// The slices actually shown on the wheel for a config.
+function slotsFor(cfg) {
+  const live = new Set(cfg.prizes.filter(isOn).map(p => p.id));
+  if (cfg.wheel.mode === 'manual') return cfg.wheel.slots.filter(id => live.has(id));
+  return buildLayout(cfg.prizes.filter(isOn));
+}
+// In manual mode the slice count of each prize comes from the slot list.
+function syncCounts(cfg) {
+  if (cfg.wheel.mode !== 'manual') return;
+  cfg.prizes.forEach(p => { p.slices = cfg.wheel.slots.filter(id => id === p.id).length; });
+}
+function freezeToManual(cfg) {
+  if (cfg.wheel.mode === 'manual') return;
+  cfg.wheel = { mode: 'manual', slots: buildLayout(cfg.prizes.filter(isOn)) };
+  syncCounts(cfg);
+}
+// Insert a slice for a prize into the biggest gap between its existing slices.
+function insertSlot(slots, id) {
+  const n = slots.length;
+  const pos = slots.map((s, i) => s === id ? i : -1).filter(i => i >= 0);
+  if (!n || !pos.length) { slots.push(id); return; }
+  let best = n, bestGap = -1;
+  pos.forEach((a, k) => {
+    const b = k + 1 < pos.length ? pos[k + 1] : pos[0] + n;
+    if (b - a > bestGap) { bestGap = b - a; best = (a + Math.ceil((b - a) / 2)) % n || n; }
+  });
+  slots.splice(best, 0, id);
+}
+
+let state = load();
+let byId = {};
+let layout = [];
+
+/* ------------------------------------------------------------------ colors */
+const NONE_STYLE = { inner: '#030303', outer: '#17171a', title: '#A39C96', sub: '#77706B', icon: '#8a837e', shadow: true };
+const PRESETS = {
+  'low|#ffb300|bright':    { inner: '#9A4700', outer: '#FFC233', title: '#1A0A00', sub: '#3A1A00', icon: '#1A0A00', shadow: false },
+  'medium|#ff6a00|bright': { inner: '#4E0803', outer: '#F0401A', title: '#FFF6EE', sub: '#FFD9C2', icon: '#FFE7A8', shadow: true },
+};
+function prizeColor(p, tiers = state.tiers) {
+  if (p.color) return p.color;
+  if (p.kind === 'none') return '#77706B';
+  return tiers[p.tier].color;
+}
+function sliceStyle(p, i, tiers) {
+  if (!p.color && p.kind === 'none') return NONE_STYLE;
+  const t = tiers[p.tier];
+  const color = p.color || t.color;
+  const style = p.color ? 'bright' : t.style;
+  const preset = !p.color && PRESETS[`${p.tier}|${color.toLowerCase()}|${style}`];
+  if (preset) return preset;
+  if (style === 'dark') {
+    const title = lum(color) < .06 ? mix(color, '#ffffff', .55) : mix(color, '#ffffff', .15);
+    return { inner: i % 2 ? '#090909' : '#0B0B0C', outer: i % 2 ? mix(color, '#141416', .82) : '#242428', title, sub: '#D9CFC8', icon: title, shadow: true };
+  }
+  const light = lum(color) > .4;
+  return {
+    inner: mix(color, '#000000', .62), outer: mix(color, '#ffffff', .1),
+    title: light ? '#1A0A00' : '#FFF6EE', sub: light ? '#3A1A00' : mix(color, '#ffffff', .78),
+    icon: light ? '#1A0A00' : '#FFF1D6', shadow: !light,
+  };
+}
+
+/* ------------------------------------------------------------------ wheel drawing */
+function drawWheel(cv, slots, map, opts = {}) {
+  const tiers = opts.tiers || state.tiers;
+  const ctx = cv.getContext('2d');
+  const S = cv.width, R = S / 2, n = slots.length;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, S, S);
+  if (!n) {
+    ctx.fillStyle = '#0b0b0c'; ctx.beginPath(); ctx.arc(R, R, R, 0, Math.PI * 2); ctx.fill();
+    return;
+  }
+  ctx.translate(R, R);
+  const step = Math.PI * 2 / n;
+  const compact = opts.compact;
+  // text/icon scale relative to the original 24-slice design
+  const k = Math.max(.45, Math.min(1.25, Math.tan(Math.PI / n) / Math.tan(Math.PI / 24)));
+
+  slots.forEach((id, i) => {
+    const p = map[id]; if (!p) return;
+    const st = sliceStyle(p, i, tiers);
+    const c = -Math.PI / 2 + i * step;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, c - step / 2, c + step / 2); ctx.closePath();
+    const g = ctx.createRadialGradient(0, 0, R * .12, 0, 0, R);
+    g.addColorStop(0, st.inner); g.addColorStop(1, st.outer);
+    ctx.fillStyle = g; ctx.fill();
+  });
+
+  ctx.lineWidth = Math.max(1, R * .006);
+  ctx.strokeStyle = 'rgba(255,150,60,.6)';
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + i * step - step / 2;
+    ctx.beginPath(); ctx.moveTo(Math.cos(a) * R * .2, Math.sin(a) * R * .2); ctx.lineTo(Math.cos(a) * R, Math.sin(a) * R); ctx.stroke();
+  }
+
+  if (opts.highlight != null && opts.highlight >= 0 && opts.highlight < n) {
+    const c = -Math.PI / 2 + opts.highlight * step;
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R * .995, c - step / 2, c + step / 2); ctx.closePath();
+    if (opts.muted) {
+      ctx.lineWidth = R * .008; ctx.strokeStyle = 'rgba(200,190,180,.55)'; ctx.lineJoin = 'round'; ctx.stroke();
+    } else {
+      ctx.fillStyle = 'rgba(255,240,200,.16)'; ctx.fill();
+      ctx.shadowColor = '#FFD166'; ctx.shadowBlur = R * .05;
+      ctx.lineWidth = R * .014; ctx.strokeStyle = '#FFE29A'; ctx.lineJoin = 'round'; ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  slots.forEach((id, i) => {
+    const p = map[id]; if (!p) return;
+    const st = sliceStyle(p, i, tiers);
+    const c = -Math.PI / 2 + i * step;
+    ctx.save();
+    ctx.rotate(c);
+
+    const paths = ICON_PATHS[p.icon] || ICON_PATHS.gift;
+    const isz = R * (compact ? .11 : .086) * Math.min(1.2, k);
+    ctx.save();
+    ctx.translate(R * (compact ? .8 : .845), 0);
+    ctx.rotate(Math.PI / 2);
+    ctx.scale(isz / 24, isz / 24);
+    ctx.translate(-12, -12);
+    ctx.strokeStyle = st.icon; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    paths.forEach(pp => ctx.stroke(pp));
+    ctx.restore();
+
+    if (!compact) {
+      const xEnd = R * .755, maxW = R * .34;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      if (st.shadow) { ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = R * .012; ctx.shadowOffsetY = R * .003; }
+      const two = !!(p.line2 && p.line2.trim()) && k > .55;
+      let f1 = R * (two ? .066 : .074) * Math.min(1.15, k);
+      ctx.font = `${f1}px "Russo One", "Arial Black", sans-serif`;
+      let w = ctx.measureText(p.line1).width;
+      if (w > maxW) { f1 *= maxW / w; ctx.font = `${f1}px "Russo One", "Arial Black", sans-serif`; }
+      ctx.fillStyle = st.title;
+      ctx.fillText(p.line1, xEnd, two ? -R * .023 * Math.min(1.15, k) : 0);
+      if (two) {
+        let f2 = R * .043 * Math.min(1.15, k);
+        ctx.font = `700 ${f2}px "Chakra Petch", "Segoe UI", sans-serif`;
+        if ('letterSpacing' in ctx) ctx.letterSpacing = `${(R * .006 * k).toFixed(1)}px`;
+        w = ctx.measureText(p.line2).width;
+        if (w > maxW) { f2 *= maxW / w; ctx.font = `700 ${f2}px "Chakra Petch", "Segoe UI", sans-serif`; }
+        ctx.fillStyle = st.sub;
+        ctx.fillText(p.line2, xEnd, R * .038 * Math.min(1.15, k));
+        if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+      }
+    }
+    ctx.restore();
+  });
+
+  const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, R * .25);
+  hg.addColorStop(0, '#1d1d21'); hg.addColorStop(1, '#050505');
+  ctx.beginPath(); ctx.arc(0, 0, R * .245, 0, Math.PI * 2); ctx.fillStyle = hg; ctx.fill();
+  ctx.lineWidth = R * .008; ctx.strokeStyle = 'rgba(255,106,0,.7)'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, R - ctx.lineWidth / 2, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,170,80,.5)'; ctx.stroke();
+}
+
+/* ------------------------------------------------------------------ main wheel */
+const wheelEl = $('#wheel');
+const wheelCv = $('#wheelCanvas');
+const ringEl = $('#ring');
+const pointerEl = $('#pointer');
+const spinBtn = $('#spinBtn');
+const statusEl = $('#status');
+let rotation = 0;
+let spinning = false;
+let highlightSlot = -1;
+let highlightMuted = false;
+const step = () => 360 / Math.max(1, layout.length);
+
+function sizeCanvas() {
+  const r = wheelCv.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  const px = Math.max(200, Math.min(1600, Math.round(r.width * dpr)));
+  if (wheelCv.width !== px) { wheelCv.width = px; wheelCv.height = px; }
+  drawMain();
+}
+function drawMain() { drawWheel(wheelCv, layout, byId, { highlight: highlightSlot, muted: highlightMuted }); }
+new ResizeObserver(sizeCanvas).observe(wheelCv);
+
+// LED bulbs between slices (capped so big wheels don't get crowded)
+function buildBulbs(n) {
+  const count = n <= 40 ? n : 40;
+  const st = 360 / count, off = n <= 40 ? st / 2 : 0;
+  let html = '';
+  for (let i = 0; i < count; i++) {
+    const a = (-90 + off + i * st) * Math.PI / 180;
+    html += `<circle class="bulb" style="--i:${i};--n:${count}" cx="${(500 + Math.cos(a) * 470).toFixed(1)}" cy="${(500 + Math.sin(a) * 470).toFixed(1)}" r="${count > 30 ? 9 : 11}"/>`;
+  }
+  $('#bulbs').innerHTML = html;
+}
+
+function setRotation(deg) { wheelCv.style.transform = `rotate(${deg}deg)`; }
+
+function renderLegend() {
+  const el = $('#legend');
+  el.hidden = !state.settings.showLegend;
+  const onWheel = new Set(layout);
+  const groups = TIER_ORDER.map(t => ({ t, items: state.prizes.filter(p => p.tier === t && p.kind !== 'none' && onWheel.has(p.id)) })).filter(g => g.items.length);
+  el.innerHTML = `<h2>${esc(state.texts.legend)}</h2>` + groups.map(g => {
+    const tc = state.tiers[g.t].color;
+    return `<div class="legend-group" style="--tc:${tc};--tt:${inkOn(tc)}">
+      <span class="tier-tag">${esc(state.tiers[g.t].badge)}</span>
+      <ul>${g.items.map(p => `<li style="--lc:${prizeColor(p)}">${icon(p.icon)}${esc(p.name)}</li>`).join('')}</ul>
+    </div>`;
+  }).join('');
+}
+
+function updateSpinUI() {
+  const T = state.texts;
+  const locked = state.settings.lock && state.credits <= 0;
+  spinBtn.disabled = spinning;
+  spinBtn.classList.toggle('is-locked', locked && !spinning);
+  $('#spinIcon').innerHTML = locked && !spinning ? icon('lock') : '';
+  $('#spinLabel').textContent = spinning ? 'SPINNING…' : locked ? T.locked : T.spin;
+  spinBtn.setAttribute('aria-label', spinning ? 'Wheel is spinning' : locked ? 'Wheel locked. Staff can unlock spins' : 'Spin the wheel');
+  if (spinning) statusEl.textContent = 'Good luck…';
+  else if (state.settings.lock && state.credits > 0) statusEl.innerHTML = `<b>${state.credits}</b> spin${state.credits === 1 ? '' : 's'} ready`;
+  else statusEl.textContent = T.status;
+}
+
+function applyState() {
+  byId = Object.fromEntries(state.prizes.map(p => [p.id, p]));
+  layout = slotsFor(state);
+  wheelCv.setAttribute('aria-label', `Prize wheel with ${layout.length} slices`);
+  $('#hubText').textContent = state.texts.hub;
+  $('#hub').hidden = false;
+  buildBulbs(layout.length);
+  drawMain();
+  renderLegend();
+  updateSpinUI();
+}
+
+function pickPrize() {
+  const onWheel = new Set(layout);
+  const pool = state.prizes.filter(p => isOn(p) && p.weight > 0 && onWheel.has(p.id));
+  const total = sum(pool, p => p.weight);
+  let r = rand() * total;
+  for (const p of pool) { r -= p.weight; if (r < 0) return p; }
+  return pool[pool.length - 1];
+}
+function claimCode() {
+  const A = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let s = '';
+  for (let i = 0; i < 4; i++) s += A[Math.floor(rand() * A.length)];
+  return 'GZX-' + s;
+}
+
+let flapAnim = null;
+function flap() {
+  if (reduced()) return;
+  if (flapAnim) flapAnim.cancel();
+  flapAnim = pointerEl.animate([{ transform: 'rotate(-26deg)' }, { transform: 'rotate(0deg)' }], { duration: 180, easing: 'cubic-bezier(.2,.9,.3,1.35)' });
+}
+
+function spin() {
+  if (spinning || document.querySelector('dialog[open]')) return;
+  if (state.settings.lock && state.credits <= 0) { openPin('unlock'); return; }
+  const prize = pickPrize();
+  if (!layout.length || !prize) return;
+  unlockAudio();
+
+  const STEP = step();
+  const slots = layout.map((id, i) => id === prize.id ? i : -1).filter(i => i >= 0);
+  const slot = slots[Math.floor(rand() * slots.length)];
+  const offset = (rand() * 2 - 1) * STEP * 0.36; // stay well inside the slice
+  const targetMod = (((-slot * STEP - offset) % 360) + 360) % 360;
+  const curMod = ((rotation % 360) + 360) % 360;
+  const delta = (targetMod - curMod + 360) % 360;
+  const durS = reduced() ? 2.2 : state.settings.duration;
+  const turns = reduced() ? 1 : Math.max(3, Math.round(durS * 0.85)) + Math.floor(rand() * 2);
+  const start = rotation;
+  const end = start + turns * 360 + delta;
+  const wind = reduced() ? 0 : -10;
+  const windMs = reduced() ? 0 : 450;
+  const mainMs = durS * 1000;
+
+  if (state.settings.lock) state.credits = Math.max(0, state.credits - 1);
+  spinning = true;
+  highlightSlot = -1; drawMain();
+  wheelEl.classList.add('is-spinning');
+  ringEl.dataset.mode = 'spin';
+  updateSpinUI();
+
+  let lastIdx = Math.floor((start + STEP / 2) / STEP);
+  const t0 = performance.now();
+  const frame = now => {
+    const e = now - t0;
+    let r;
+    if (e < windMs) {
+      const q = e / windMs;
+      r = start + wind * (0.5 - Math.cos(q * Math.PI) / 2);
+    } else {
+      const q = Math.min(1, (e - windMs) / mainMs);
+      const from = start + wind;
+      r = from + (end - from) * (1 - Math.pow(1 - q, 4.2));
+    }
+    setRotation(r);
+    const idx = Math.floor((r + STEP / 2) / STEP);
+    if (idx !== lastIdx) { lastIdx = idx; tickSound(); flap(); }
+    if (e < windMs + mainMs) requestAnimationFrame(frame);
+    else finish(prize, slot, end);
+  };
+  requestAnimationFrame(frame);
+}
+
+function finish(prize, slot, end) {
+  rotation = end - 360 * Math.floor(end / 360);
+  setRotation(rotation);
+  spinning = false;
+  wheelEl.classList.remove('is-spinning');
+  const none = prize.kind === 'none';
+  highlightSlot = slot; highlightMuted = none; drawMain();
+
+  // Try Again stops quietly; every real prize gets the full flare.
+  if (none) ringEl.dataset.mode = 'idle';
+  else { ringEl.style.setProperty('--win', prizeColor(prize)); ringEl.dataset.mode = 'win'; }
+
+  const entry = { t: Date.now(), id: prize.id, name: prize.name, tier: prize.tier, kind: prize.kind, code: prize.kind === 'prize' ? claimCode() : '', claimed: false };
+  state.history.unshift(entry);
+  if (state.history.length > 1000) state.history.length = 1000;
+  if (prize.kind === 'respin' && state.settings.lock) state.credits += 1;
+  persist();
+  updateSpinUI();
+
+  if (!none) { resultSound(prize); flare(prize); }
+  const wait = reduced() ? 150 : none ? 450 : prize.tier === 'low' ? 1600 : 1200;
+  setTimeout(() => showResult(prize, entry), wait);
+}
+
+/* ------------------------------------------------------------------ result */
+const resultDlg = $('#resultDlg');
+function showResult(prize, entry) {
+  const none = prize.kind === 'none', respin = prize.kind === 'respin';
+  const t = state.tiers[prize.tier], T = state.texts;
+  const color = none ? (prize.color || '#8a837e') : prizeColor(prize);
+  $('#resCard').style.setProperty('--tc', color);
+  $('#resCard').style.setProperty('--tt', inkOn(color));
+  $('#resBadge').textContent = none ? 'NO PRIZE' : respin ? 'BONUS' : t.badge;
+  $('#resIcon').innerHTML = icon(prize.icon);
+  $('#resKicker').textContent = none ? 'So close!' : respin ? 'Bonus!' : t.kicker;
+  $('#resTitle').textContent = none ? T.noneTitle : prize.name;
+  $('#resCode').hidden = !entry.code;
+  $('#resCodeVal').textContent = entry.code;
+  $('#resNote').textContent = none ? T.noneNote : respin ? 'You get a free re-spin. Tap below to go again.' : T.winNote;
+  $('#resBtn').textContent = none ? 'OK' : respin ? 'SPIN AGAIN' : 'COLLECT';
+  $('#resBtn').dataset.respin = respin ? '1' : '';
+  resultDlg.showModal();
+  $('#resBtn').focus();
+}
+$('#resBtn').addEventListener('click', () => resultDlg.close());
+resultDlg.addEventListener('close', () => {
+  highlightSlot = -1; highlightMuted = false; drawMain();
+  ringEl.dataset.mode = 'idle';
+  if ($('#resBtn').dataset.respin && !(state.settings.lock && state.credits <= 0)) setTimeout(spin, 250);
+});
+
+spinBtn.addEventListener('click', spin);
+$('#hub').addEventListener('click', spin);
+document.addEventListener('keydown', e => {
+  if ((e.code === 'Space' || e.code === 'Enter') && !document.querySelector('dialog[open]') && (document.activeElement === document.body || !document.activeElement)) {
+    e.preventDefault(); spin();
+  }
+  if (e.ctrlKey && e.shiftKey && e.code === 'KeyA' && !document.querySelector('dialog[open]')) { e.preventDefault(); openPin('admin'); }
+});
+
+/* ------------------------------------------------------------------ audio */
+let actx = null, lastTick = 0;
+function unlockAudio() {
+  if (!state.settings.sound) return;
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  } catch { actx = null; }
+}
+function tone(freq, start, dur, type = 'triangle', vol = .14, slideTo) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, start);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, start + dur);
+  g.gain.setValueAtTime(0.0001, start);
+  g.gain.exponentialRampToValueAtTime(vol, start + .012);
+  g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  o.connect(g).connect(actx.destination);
+  o.start(start); o.stop(start + dur + .02);
+}
+function tickSound() {
+  if (!actx || !state.settings.sound) return;
+  const now = actx.currentTime;
+  if (now - lastTick < .028) return;
+  lastTick = now;
+  tone(1500, now, .04, 'square', .05, 650);
+}
+function resultSound(prize) {
+  if (!actx || !state.settings.sound || prize.kind === 'none') return;
+  const now = actx.currentTime + .05;
+  tone(140, now - .04, .55, 'sine', .3, 45);   // impact thump under the fanfare
+  const seq = prize.tier === 'low' ? [523, 659, 784, 1047, 1319, 1568] : prize.tier === 'medium' ? [523, 659, 784, 1047] : [587, 880, 1175];
+  seq.forEach((f, i) => { tone(f, now + i * .09, .32, 'triangle', .13); tone(f * 2, now + i * .09, .18, 'sine', .04); });
+  const last = now + seq.length * .09;
+  tone(seq[seq.length - 1], last, .9, 'triangle', .1);
+  if (prize.tier === 'low') tone(seq[seq.length - 3], last, .9, 'triangle', .07);
+}
+
+/* ------------------------------------------------------------------ particles */
+const emCv = $('#embers'), fxCv = $('#fx');
+const emCtx = emCv.getContext('2d'), fxCtx = fxCv.getContext('2d');
+let embers = [], sparks = [], dprFx = 1;
+function sizeFx() {
+  dprFx = Math.min(window.devicePixelRatio || 1, 2);
+  for (const c of [emCv, fxCv]) { c.width = Math.round(innerWidth * dprFx); c.height = Math.round(innerHeight * dprFx); }
+}
+sizeFx();
+addEventListener('resize', sizeFx);
+function spawnEmber(initial) {
+  const W = emCv.width, H = emCv.height;
+  return {
+    x: Math.random() * W, y: initial ? Math.random() * H : H + 10 * dprFx,
+    vx: (Math.random() - .5) * .35 * dprFx, vy: -(0.35 + Math.random() * 1.1) * dprFx,
+    r: (0.6 + Math.random() * 1.8) * dprFx, life: 0, max: 260 + Math.random() * 360,
+    hue: 14 + Math.random() * 28, ph: Math.random() * 6.28,
+  };
+}
+function initEmbers() {
+  const count = Math.round(Math.min(90, (innerWidth * innerHeight) / 22000));
+  embers = Array.from({ length: count }, () => spawnEmber(true));
+}
+initEmbers();
+
+/* Big win flare: screen flash, light rays, wheel punch, shockwave rings, spark bursts.
+   Scales with the odds group — jackpots get the most. */
+const flashEl = $('#flash'), raysEl = $('#rays');
+let waves = [];
+const SPARK_COLS = ['#FFF3C4', '#FFD166', '#FFB300', '#FF6A00', '#E8270C'];
+const FLARE = {
+  low:    { flash: 1,   rays: 1,   ray: 'rgba(255,214,110,.5)', waves: 3, bursts: [220, 170, 140], power: 17, shake: true,  fountain: true },
+  medium: { flash: .85, rays: .9,  ray: 'rgba(255,150,50,.45)', waves: 2, bursts: [170, 120],      power: 14, shake: false, fountain: false },
+  high:   { flash: .7,  rays: .75, ray: 'rgba(255,110,40,.4)',  waves: 2, bursts: [140],           power: 12, shake: false, fountain: false },
+};
+function sparkWave(cx, cy, rad, count, power) {
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2, s = (3 + Math.random() * power) * dprFx;
+    sparks.push({ x: cx + Math.cos(a) * rad, y: cy + Math.sin(a) * rad, px: cx, py: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 2 * dprFx, life: 0, max: 55 + Math.random() * 70, c: SPARK_COLS[Math.floor(Math.random() * SPARK_COLS.length)], w: (1.4 + Math.random() * 2.6) * dprFx });
+  }
+}
+function fountain(x, dir) {
+  for (let i = 0; i < 7; i++) {
+    const a = -Math.PI / 2 + dir * (0.18 + Math.random() * 0.35), s = (13 + Math.random() * 9) * dprFx;
+    sparks.push({ x, y: fxCv.height + 4, px: x, py: fxCv.height, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, max: 80 + Math.random() * 50, c: SPARK_COLS[Math.floor(Math.random() * SPARK_COLS.length)], w: (1.6 + Math.random() * 2.4) * dprFx });
+  }
+}
+function flare(prize) {
+  if (reduced()) return;
+  const cfg = FLARE[prize.tier] || FLARE.high;
+  const color = prizeColor(prize);
+  const r = wheelEl.getBoundingClientRect();
+  const cxCss = r.left + r.width / 2, cyCss = r.top + r.height / 2;
+  const cx = cxCss * dprFx, cy = cyCss * dprFx;
+
+  flashEl.style.setProperty('--fx', cxCss + 'px');
+  flashEl.style.setProperty('--fy', cyCss + 'px');
+  flashEl.animate([{ opacity: 0 }, { opacity: cfg.flash, offset: .12 }, { opacity: 0 }], { duration: 1000, easing: 'ease-out' });
+
+  raysEl.style.setProperty('--ray', cfg.ray);
+  raysEl.animate([
+    { opacity: 0, transform: 'scale(.5) rotate(0deg)' },
+    { opacity: cfg.rays, transform: 'scale(1) rotate(30deg)', offset: .18 },
+    { opacity: cfg.rays * .8, transform: 'scale(1.06) rotate(80deg)', offset: .7 },
+    { opacity: 0, transform: 'scale(1.12) rotate(115deg)' },
+  ], { duration: 2800, easing: 'cubic-bezier(.2,.7,.3,1)' });
+
+  wheelEl.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.07)', offset: .22 }, { transform: 'scale(.985)', offset: .6 }, { transform: 'scale(1)' }], { duration: 700, easing: 'ease-out' });
+  pointerEl.animate([{ transform: 'rotate(0) scale(1)' }, { transform: 'rotate(0) scale(1.35)', offset: .3 }, { transform: 'rotate(0) scale(1)' }], { duration: 600, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+
+  if (cfg.shake) $('.app').animate([
+    { transform: 'translate(0,0)' }, { transform: 'translate(-7px,4px)' }, { transform: 'translate(6px,-5px)' },
+    { transform: 'translate(-5px,-3px)' }, { transform: 'translate(4px,5px)' }, { transform: 'translate(-2px,1px)' }, { transform: 'translate(0,0)' },
+  ], { duration: 520, easing: 'ease-out' });
+
+  const far = Math.hypot(fxCv.width, fxCv.height) * .55;
+  for (let i = 0; i < cfg.waves; i++) {
+    setTimeout(() => waves.push({ x: cx, y: cy, r0: r.width * .12 * dprFx, r1: far, life: 0, max: 60 + i * 8, c: i % 2 ? '#FFE29A' : color, w: (14 - i * 3) * dprFx }), i * 170);
+  }
+  cfg.bursts.forEach((n, i) => setTimeout(() => sparkWave(cx, cy, r.width * .1 * dprFx, n, cfg.power + i * 2), i * 260));
+  if (cfg.fountain) {
+    let k = 0;
+    const id = setInterval(() => {
+      fountain(fxCv.width * .04, 1); fountain(fxCv.width * .96, -1);
+      if (++k > 22) clearInterval(id);
+    }, 60);
+  }
+}
+let running = true;
+function loop() {
+  if (!running) return;
+  emCtx.clearRect(0, 0, emCv.width, emCv.height);
+  if (!reduced()) {
+    emCtx.globalCompositeOperation = 'lighter';
+    const spd = spinning ? 2.2 : 1;
+    for (let i = 0; i < embers.length; i++) {
+      const p = embers[i];
+      p.life += spd; p.ph += .05;
+      p.x += p.vx * spd + Math.sin(p.ph) * .25 * dprFx; p.y += p.vy * spd;
+      const q = p.life / p.max;
+      if (q >= 1 || p.y < -20) { embers[i] = spawnEmber(false); continue; }
+      const a = Math.sin(q * Math.PI) * (.55 + .45 * Math.sin(p.ph * 3));
+      emCtx.fillStyle = `hsla(${p.hue},100%,${55 + p.r * 4}%,${Math.max(0, a).toFixed(3)})`;
+      emCtx.beginPath(); emCtx.arc(p.x, p.y, p.r, 0, 6.283); emCtx.fill();
+    }
+    emCtx.globalCompositeOperation = 'source-over';
+  }
+  fxCtx.clearRect(0, 0, fxCv.width, fxCv.height);
+  if (waves.length) {
+    fxCtx.globalCompositeOperation = 'lighter';
+    waves = waves.filter(w => {
+      w.life++;
+      const q = w.life / w.max;
+      if (q >= 1) return false;
+      const rr = w.r0 + (w.r1 - w.r0) * (1 - Math.pow(1 - q, 3));
+      fxCtx.globalAlpha = (1 - q) * .85;
+      fxCtx.strokeStyle = w.c;
+      fxCtx.shadowColor = w.c; fxCtx.shadowBlur = 24 * dprFx;
+      fxCtx.lineWidth = Math.max(1, w.w * (1 - q));
+      fxCtx.beginPath(); fxCtx.arc(w.x, w.y, rr, 0, 6.283); fxCtx.stroke();
+      return true;
+    });
+    fxCtx.shadowBlur = 0; fxCtx.globalAlpha = 1;
+    fxCtx.globalCompositeOperation = 'source-over';
+  }
+  if (sparks.length) {
+    fxCtx.globalCompositeOperation = 'lighter';
+    fxCtx.lineCap = 'round';
+    sparks = sparks.filter(s => {
+      s.px = s.x; s.py = s.y;
+      s.vx *= .975; s.vy = s.vy * .975 + .16 * dprFx;
+      s.x += s.vx; s.y += s.vy; s.life++;
+      const q = 1 - s.life / s.max;
+      if (q <= 0) return false;
+      fxCtx.strokeStyle = s.c; fxCtx.globalAlpha = q; fxCtx.lineWidth = s.w;
+      fxCtx.beginPath(); fxCtx.moveTo(s.px - s.vx, s.py - s.vy); fxCtx.lineTo(s.x, s.y); fxCtx.stroke();
+      return true;
+    });
+    fxCtx.globalAlpha = 1;
+    fxCtx.globalCompositeOperation = 'source-over';
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+document.addEventListener('visibilitychange', () => {
+  const was = running; running = !document.hidden;
+  if (running && !was) requestAnimationFrame(loop);
+});
+
+/* ------------------------------------------------------------------ toast */
+let toastT;
+function toast(msg) {
+  $('#toastMsg').textContent = msg;
+  $('#toast').classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => $('#toast').classList.remove('show'), 2400);
+}
+
+/* ------------------------------------------------------------------ PIN */
+const pinDlg = $('#pinDlg');
+let pinMode = 'admin', pinBuf = '';
+(function buildKeypad() {
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'back'];
+  $('#keypad').innerHTML = keys.map(k =>
+    k === 'clear' ? `<button class="key fn" type="button" data-k="clear">Clear</button>`
+    : k === 'back' ? `<button class="key fn" type="button" data-k="back" aria-label="Delete last digit">${icon('back')}</button>`
+    : `<button class="key" type="button" data-k="${k}">${k}</button>`).join('');
+})();
+function renderDots() {
+  const len = state.settings.pin.length;
+  $('#pinDots').innerHTML = Array.from({ length: len }, (_, i) => `<i class="${i < pinBuf.length ? 'on' : ''}"></i>`).join('');
+}
+function openPin(mode) {
+  pinMode = mode; pinBuf = '';
+  $('#pinTitle').textContent = mode === 'admin' ? 'Staff access' : 'Unlock spins';
+  $('#pinSub').textContent = mode === 'admin' ? 'Enter the staff PIN to open the admin panel.' : 'Staff: enter the PIN to give this player spins.';
+  $('#pinErr').textContent = '';
+  $('#pinView').hidden = false; $('#grantView').hidden = true;
+  renderDots();
+  pinDlg.showModal();
+}
+function pinKey(k) {
+  if (k === 'clear') pinBuf = '';
+  else if (k === 'back') pinBuf = pinBuf.slice(0, -1);
+  else if (/^\d$/.test(k) && pinBuf.length < 6) pinBuf += k;
+  $('#pinErr').textContent = '';
+  renderDots();
+  if (pinBuf.length === state.settings.pin.length) setTimeout(checkPin, 120);
+}
+function checkPin() {
+  if (pinBuf === state.settings.pin) {
+    if (pinMode === 'admin') { pinDlg.close(); openAdmin(); }
+    else {
+      $('#pinView').hidden = true; $('#grantView').hidden = false;
+      $('#pinTitle').textContent = 'Give spins';
+      $('#grantNow').textContent = state.credits ? `(${state.credits} ready now)` : '';
+      $('#grantView [data-grant="1"]').focus();
+    }
+  } else {
+    pinBuf = ''; renderDots();
+    $('#pinErr').textContent = 'Wrong PIN. Try again.';
+    const d = $('#pinDots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+  }
+}
+$('#keypad').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) pinKey(b.dataset.k); });
+pinDlg.addEventListener('keydown', e => {
+  if ($('#pinView').hidden) return;
+  if (/^\d$/.test(e.key)) { e.preventDefault(); pinKey(e.key); }
+  else if (e.key === 'Backspace') { e.preventDefault(); pinKey('back'); }
+});
+$('#grantView').addEventListener('click', e => {
+  const b = e.target.closest('[data-grant]'); if (!b) return;
+  state.credits += Number(b.dataset.grant);
+  persist(); updateSpinUI(); pinDlg.close();
+  toast(`${b.dataset.grant} spin${b.dataset.grant === '1' ? '' : 's'} added`);
+});
+$('#grantAdmin').addEventListener('click', () => { pinDlg.close(); openAdmin(); });
+$$('[data-close]', pinDlg).forEach(b => b.addEventListener('click', () => pinDlg.close()));
+$('#staffBtn').addEventListener('click', () => openPin('admin'));
+
+/* ================================================================== ADMIN */
+const adminDlg = $('#adminDlg');
+const prevCv = $('#previewCanvas');
+const editCv = $('#editCanvas');
+let draft = null, snapshot = '', confirmMode = null, selSlot = 0;
+
+const draftCfg = () => ({ prizes: draft.prizes, tiers: draft.tiers, texts: draft.texts, wheel: draft.wheel, settings: draft.settings });
+const tierColor = (p) => prizeColor(p, draft.tiers);
+
+function openAdmin() {
+  draft = clone({ prizes: state.prizes, tiers: state.tiers, texts: state.texts, wheel: state.wheel, settings: state.settings });
+  snapshot = JSON.stringify(draft);
+  $('#pinNew').value = ''; $('#pinConfirm').value = '';
+  confirmMode = null; selSlot = 0;
+  restoreFooter(true);
+  selectTab('odds');
+  renderAll();
+  adminDlg.showModal();
+}
+function renderAll() {
+  renderPrizeList();
+  renderLook();
+  renderSettings();
+  refresh();
+}
+const isDirty = () => JSON.stringify(draft) !== snapshot || $('#pinNew').value || $('#pinConfirm').value;
+
+function selectTab(name) {
+  $$('.tab').forEach(t => {
+    const on = t.dataset.tab === name;
+    t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+    $('#pane-' + t.dataset.tab).hidden = !on;
+  });
+  if (name === 'history') renderHistory();
+  if (name === 'wheel') renderWheelTab();
+  $('.adm-body').scrollTop = 0;
+}
+$('.tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) selectTab(t.dataset.tab); });
+$('.tabs').addEventListener('keydown', e => {
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const tabs = $$('.tab'); const i = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
+  const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+  selectTab(n.dataset.tab); n.focus();
+});
+
+/* ---------- prizes tab */
+function rowHTML(p, i, total) {
+  const tc = tierColor(p);
+  const off = !isOn(p);
+  return `<article class="prize-row${off ? ' is-off' : ''}" data-id="${p.id}" style="--tc:${tc}">
+    <div class="row-top">
+      <span class="row-icon" data-o="icon">${icon(p.icon)}</span>
+      <label class="fld grow"><span>Prize name</span><input data-f="name" value="${esc(p.name)}" maxlength="40" required></label>
+      <div class="row-tools">
+        <input type="checkbox" class="switch" data-f="enabled" role="switch" ${off ? '' : 'checked'} aria-label="Show ${esc(p.name)} on the wheel" title="On the wheel">
+        <button class="icon-btn" type="button" data-act="up" aria-label="Move up" title="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up')}</button>
+        <button class="icon-btn" type="button" data-act="down" aria-label="Move down" title="Move down" ${i === total - 1 ? 'disabled' : ''}>${icon('down')}</button>
+        <button class="icon-btn" type="button" data-act="dup" aria-label="Duplicate ${esc(p.name)}" title="Duplicate">${icon('copy')}</button>
+        <button class="icon-btn danger" type="button" data-act="remove" aria-label="Delete ${esc(p.name)}" title="Delete">${icon('trash')}</button>
+      </div>
+    </div>
+    <div class="row-grid">
+      <label class="fld"><span>Odds group</span><select data-f="tier">${TIER_ORDER.map(k => `<option value="${k}"${k === p.tier ? ' selected' : ''}>${TIER_NAMES[k]}</option>`).join('')}</select></label>
+      <label class="fld"><span>Result</span><select data-f="kind">
+        <option value="prize"${p.kind === 'prize' ? ' selected' : ''}>Prize</option>
+        <option value="none"${p.kind === 'none' ? ' selected' : ''}>No prize</option>
+        <option value="respin"${p.kind === 'respin' ? ' selected' : ''}>Free re-spin</option></select></label>
+      <label class="fld"><span>Icon</span><select data-f="icon">${Object.entries(ICONS).map(([k, v]) => `<option value="${k}"${k === p.icon ? ' selected' : ''}>${v.label}</option>`).join('')}</select></label>
+      <div class="fld"><span>Slice color</span><div class="color-fld">
+        <input type="color" data-f="color" value="${p.color || tierColor({ ...p, color: '' })}" aria-label="Slice color for ${esc(p.name)}">
+        <button class="btn" type="button" data-act="autocolor" ${p.color ? '' : 'disabled'} title="Use the odds group color">${p.color ? 'Use group' : 'Group'}</button>
+      </div></div>
+      <label class="fld"><span>Wheel text</span><input data-f="line1" value="${esc(p.line1)}" maxlength="10" required></label>
+      <label class="fld"><span>Wheel sub-text</span><input data-f="line2" value="${esc(p.line2)}" maxlength="10" placeholder="Optional"></label>
+    </div>
+    <div class="row-odds">
+      <div class="stepper" role="group" aria-label="Slices for ${esc(p.name)}">
+        <span class="lbl">Slices</span>
+        <button type="button" data-act="dec" aria-label="Fewer slices">${icon('minus')}</button>
+        <output data-o="slices">${p.slices}</output>
+        <button type="button" data-act="inc" aria-label="More slices">${icon('plus')}</button>
+      </div>
+      <div class="chance">
+        <span class="lbl">Chance</span>
+        <input type="range" min="0" max="100" step="0.5" data-f="weight" value="${Math.min(100, p.weight)}" aria-label="Chance weight for ${esc(p.name)}">
+        <input type="number" min="0" max="1000" step="0.1" data-f="weight" value="${p.weight}" aria-label="Chance weight number for ${esc(p.name)}">
+        <output class="pct-out" data-o="pct"></output>
+      </div>
+    </div>
+  </article>`;
+}
+function renderPrizeList() {
+  const P = draft.prizes;
+  $('#prizeList').innerHTML = P.map((p, i) => rowHTML(p, i, P.length)).join('');
+}
+function rerenderRow(p) {
+  const row = $(`.prize-row[data-id="${p.id}"]`); if (!row) return;
+  const i = draft.prizes.indexOf(p);
+  row.outerHTML = rowHTML(p, i, draft.prizes.length);
+}
+
+function refresh() {
+  const P = draft.prizes;
+  const cfg = draftCfg();
+  const slots = slotsFor(cfg);
+  const N = slots.length;
+  const onWheel = new Set(slots);
+  const live = P.filter(p => isOn(p) && onWheel.has(p.id));
+  const totalW = sum(live, p => p.weight);
+
+  $$('.prize-row').forEach(row => {
+    const p = P.find(x => x.id === row.dataset.id); if (!p) return;
+    const real = isOn(p) && onWheel.has(p.id) && totalW > 0 ? p.weight / totalW * 100 : 0;
+    $('[data-o="pct"]', row).innerHTML = !isOn(p) ? `—<small>hidden</small>` : `${pct1(real)}<small>${real > 0 ? '1 in ' + Math.max(1, Math.round(100 / real)) : 'never wins'}</small>`;
+    $('[data-o="slices"]', row).textContent = p.slices;
+    $('[data-act="dec"]', row).disabled = p.slices <= 0;
+    $('[data-act="inc"]', row).disabled = N >= MAX_SLICES;
+    row.style.setProperty('--tc', tierColor(p));
+    row.classList.toggle('is-off', !isOn(p));
+  });
+
+  const sv = $('#sliceVal');
+  sv.textContent = N;
+  sv.className = 'val ' + (N >= MIN_SLICES && N <= MAX_SLICES ? 'good' : 'bad');
+  $('#sliceMeter').innerHTML = TIER_ORDER.map(t => {
+    const s = slots.filter(id => (P.find(p => p.id === id) || {}).tier === t).length;
+    return `<span style="width:${N ? s / N * 100 : 0}%;background:${draft.tiers[t].color}"></span>`;
+  }).join('');
+  const sh = $('#sliceHint');
+  if (N < MIN_SLICES) { sh.textContent = `The wheel needs at least ${MIN_SLICES} slices.`; sh.className = 'hint bad'; }
+  else { sh.textContent = `Use + and − to grow or shrink the wheel (up to ${MAX_SLICES}). Slice size only changes the look; chance decides what wins.`; sh.className = 'hint'; }
+
+  const split = TIER_ORDER.map(t => ({ t, v: totalW ? sum(live.filter(p => p.tier === t), p => p.weight) / totalW * 100 : 0 }));
+  $('#splitMeter').innerHTML = split.map(s => `<span style="width:${s.v}%;background:${draft.tiers[s.t].color}"></span>`).join('');
+  $('#splitLegend').innerHTML = split.map(s => `<li style="--tc:${draft.tiers[s.t].color}"><span class="sw"></span>${TIER_NAMES[s.t]} <span style="color:var(--muted)">· ${esc(draft.tiers[s.t].badge)}</span><span class="pct">${pct1(s.v)}</span></li>`).join('');
+  const winPct = totalW ? sum(live.filter(p => p.kind !== 'none'), p => p.weight) / totalW * 100 : 0;
+  $('#winVal').textContent = pct1(winPct);
+  $('#winHint').textContent = `Players win something on about ${Math.round(winPct)} of every 100 spins.`;
+
+  const errs = [], warns = [];
+  if (N < MIN_SLICES) errs.push(`The wheel needs at least ${MIN_SLICES} slices (now ${N}).`);
+  if (N > MAX_SLICES) errs.push(`The wheel can have at most ${MAX_SLICES} slices.`);
+  if (totalW <= 0) errs.push('At least one prize on the wheel needs a chance above 0.');
+  P.forEach(p => {
+    const nm = p.name.trim() || 'A prize';
+    if (!p.name.trim()) errs.push('Every prize needs a name.');
+    if (!p.line1.trim()) errs.push(`${nm}: wheel text can't be empty.`);
+    if (isOn(p) && p.weight > 0 && p.slices === 0) errs.push(`${nm} has a chance but no slice on the wheel.`);
+    if (isOn(p) && p.weight === 0 && p.slices > 0) warns.push(`${nm} is on the wheel but can never win.`);
+  });
+  Object.entries(draft.texts).forEach(([k, v]) => { if (['spin', 'locked'].includes(k) && !String(v).trim()) errs.push('Button text can’t be empty.'); });
+  const uniqErrs = [...new Set(errs)];
+  $('#warnPanel').hidden = !uniqErrs.length && !warns.length;
+  $('#warnList').innerHTML = uniqErrs.map(e => `<li class="bad">${icon('alert')}<span>${esc(e)}</span></li>`).join('') + warns.map(w => `<li class="warn">${icon('alert')}<span>${esc(w)}</span></li>`).join('');
+  $$('.prize-row').forEach(row => {
+    const p = P.find(x => x.id === row.dataset.id); if (!p) return;
+    $('[data-f="name"]', row).setAttribute('aria-invalid', !p.name.trim());
+    $('[data-f="line1"]', row).setAttribute('aria-invalid', !p.line1.trim());
+  });
+
+  const pn = $('#pinNew').value, pc = $('#pinConfirm').value, pinMsg = $('#pinMsg');
+  if (pn || pc) {
+    if (!/^\d{4,6}$/.test(pn)) { uniqErrs.push('New PIN must be 4–6 digits.'); pinMsg.textContent = 'Use 4 to 6 digits.'; pinMsg.style.color = 'var(--danger)'; }
+    else if (pn !== pc) { uniqErrs.push('PIN confirmation does not match.'); pinMsg.textContent = 'The two PINs don\'t match yet.'; pinMsg.style.color = 'var(--danger)'; }
+    else { pinMsg.textContent = 'New PIN will be saved.'; pinMsg.style.color = 'var(--ok)'; }
+  } else { pinMsg.textContent = 'The PIN protects this panel on the lounge screen.'; pinMsg.style.color = ''; }
+
+  const map = Object.fromEntries(P.map(p => [p.id, p]));
+  drawWheel(prevCv, slots, map, { compact: true, tiers: draft.tiers });
+  if (!$('#pane-wheel').hidden) renderWheelTab();
+
+  if (!confirmMode) {
+    const msg = $('#footMsg');
+    if (uniqErrs.length) { msg.textContent = 'Fix before saving: ' + uniqErrs[0]; msg.className = 'msg err'; }
+    else if (isDirty()) { msg.textContent = 'You have unsaved changes.'; msg.className = 'msg warn'; }
+    else { msg.textContent = 'All changes saved.'; msg.className = 'msg'; }
+    const save = $('#admSave'); if (save) save.disabled = uniqErrs.length > 0 || !isDirty();
+  }
+  return uniqErrs;
+}
+
+function addSlice(p) {
+  if (slotsFor(draftCfg()).length >= MAX_SLICES) return;
+  if (draft.wheel.mode === 'manual') { insertSlot(draft.wheel.slots, p.id); syncCounts(draft); }
+  else p.slices++;
+}
+function removeSlice(p) {
+  if (p.slices <= 0) return;
+  if (draft.wheel.mode === 'manual') { draft.wheel.slots.splice(draft.wheel.slots.lastIndexOf(p.id), 1); syncCounts(draft); }
+  else p.slices--;
+}
+
+$('#prizeList').addEventListener('input', e => {
+  const row = e.target.closest('.prize-row'); const f = e.target.dataset.f;
+  if (!row || !f) return;
+  const p = draft.prizes.find(x => x.id === row.dataset.id);
+  if (f === 'weight') {
+    const v = Math.max(0, Math.min(1000, parseFloat(e.target.value) || 0));
+    p.weight = Math.round(v * 10) / 10;
+    $$('[data-f="weight"]', row).forEach(inp => { if (inp !== e.target) inp.value = inp.type === 'range' ? Math.min(100, p.weight) : p.weight; });
+  } else if (f === 'name' || f === 'line1' || f === 'line2') {
+    p[f] = f === 'name' ? e.target.value : e.target.value.toUpperCase();
+    if (f !== 'name') { const pos = e.target.selectionStart; e.target.value = p[f]; e.target.setSelectionRange(pos, pos); }
+  } else if (f === 'color') {
+    p.color = e.target.value;
+    const b = $('[data-act="autocolor"]', row); b.disabled = false; b.textContent = 'Use group';
+  } else return;
+  refresh();
+});
+$('#prizeList').addEventListener('change', e => {
+  const row = e.target.closest('.prize-row'); const f = e.target.dataset.f;
+  if (!row || !f) return;
+  const p = draft.prizes.find(x => x.id === row.dataset.id);
+  if (f === 'tier' || f === 'kind' || f === 'icon') {
+    p[f] = e.target.value;
+    if (f === 'icon') $('[data-o="icon"]', row).innerHTML = icon(p.icon);
+    if (!p.color) $('[data-f="color"]', row).value = tierColor(p);
+    refresh();
+  } else if (f === 'enabled') {
+    p.enabled = e.target.checked;
+    refresh();
+  }
+});
+$('#prizeList').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const row = b.closest('.prize-row');
+  const p = draft.prizes.find(x => x.id === row.dataset.id);
+  const P = draft.prizes, i = P.indexOf(p);
+  switch (b.dataset.act) {
+    case 'inc': addSlice(p); break;
+    case 'dec': removeSlice(p); break;
+    case 'up': if (i > 0) { [P[i - 1], P[i]] = [P[i], P[i - 1]]; renderPrizeList(); $(`.prize-row[data-id="${p.id}"] [data-act="up"]`)?.focus(); } break;
+    case 'down': if (i < P.length - 1) { [P[i + 1], P[i]] = [P[i], P[i + 1]]; renderPrizeList(); $(`.prize-row[data-id="${p.id}"] [data-act="down"]`)?.focus(); } break;
+    case 'dup': {
+      const c = { ...clone(p), id: uid(), name: p.name + ' (copy)', slices: draft.wheel.mode === 'manual' ? 0 : p.slices };
+      P.splice(i + 1, 0, c);
+      if (draft.wheel.mode === 'manual') for (let k = 0; k < p.slices; k++) addSlice(c);
+      renderPrizeList();
+      $(`.prize-row[data-id="${c.id}"] [data-f="name"]`)?.select();
+      break;
+    }
+    case 'remove':
+      if (P.length <= 1) { toast('The wheel needs at least one prize'); return; }
+      P.splice(i, 1);
+      if (draft.wheel.mode === 'manual') draft.wheel.slots = draft.wheel.slots.filter(id => id !== p.id);
+      row.remove();
+      renderPrizeList();
+      toast(`${p.name || 'Prize'} deleted. Cancel to undo`);
+      break;
+    case 'autocolor': p.color = ''; rerenderRow(p); break;
+  }
+  refresh();
+});
+$('#addPrize').addEventListener('click', () => {
+  const p = { id: uid(), name: 'New prize', line1: 'NEW', line2: 'PRIZE', icon: 'gift', tier: 'medium', kind: 'prize', slices: 0, weight: 5, color: '', enabled: true };
+  draft.prizes.push(p);
+  addSlice(p);
+  renderPrizeList();
+  refresh();
+  const row = $(`.prize-row[data-id="${p.id}"]`);
+  row.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' });
+  $('[data-f="name"]', row).select();
+});
+$('#normalize').addEventListener('click', () => {
+  const live = draft.prizes.filter(p => isOn(p) && p.slices > 0);
+  const tw = sum(live, p => p.weight); if (!tw) return;
+  live.forEach(p => { p.weight = Math.round(p.weight / tw * 1000) / 10; });
+  renderPrizeList(); refresh();
+});
+$('#matchSlices').addEventListener('click', () => {
+  const live = draft.prizes.filter(isOn);
+  const ts = sum(live, p => p.slices); if (!ts) return;
+  live.forEach(p => { p.weight = Math.round(p.slices / ts * 1000) / 10; });
+  renderPrizeList(); refresh();
+});
+
+/* ---------- wheel tab */
+function sizeEditCanvas() {
+  const r = editCv.getBoundingClientRect();
+  if (!r.width) return;
+  const px = Math.round(Math.min(1400, r.width * Math.min(2, window.devicePixelRatio || 1)));
+  if (editCv.width !== px) { editCv.width = px; editCv.height = px; }
+}
+new ResizeObserver(() => { if (!$('#pane-wheel').hidden) renderWheelTab(); }).observe(editCv);
+
+function renderWheelTab() {
+  if (!draft) return;
+  const slots = slotsFor(draftCfg());
+  const N = slots.length;
+  if (selSlot >= N) selSlot = Math.max(0, N - 1);
+  sizeEditCanvas();
+  const map = Object.fromEntries(draft.prizes.map(p => [p.id, p]));
+  drawWheel(editCv, slots, map, { highlight: selSlot, tiers: draft.tiers });
+  $('#wheelCount').textContent = N;
+  $('#autoArrange').checked = draft.wheel.mode === 'auto';
+  $('#arrangeHint').textContent = draft.wheel.mode === 'auto'
+    ? 'On: slices are placed automatically from the counts on the Prizes tab. Editing a slice here turns this off.'
+    : 'Off: you control every slice. Turn on to spread prizes evenly again.';
+
+  const p = map[slots[selSlot]];
+  const tc = p ? tierColor(p) : '#555';
+  $('#slotTitle').style.setProperty('--tc', tc);
+  $('#slotTitle').innerHTML = p ? `<span class="sw"></span><strong>Slice ${selSlot + 1} of ${N}</strong><span style="color:var(--muted)">· ${esc(p.name)}</span>` : '<strong>No slices</strong>';
+  $('#slotChips').innerHTML = draft.prizes.filter(isOn).map(q =>
+    `<button type="button" class="chip" data-assign="${q.id}" style="--tc:${tierColor(q)}" aria-pressed="${p && q.id === p.id}">${icon(q.icon)}${esc(q.name)}</button>`).join('');
+  $('#slotLeft').disabled = $('#slotRight').disabled = N < 2;
+  $('#slotDel').disabled = N <= MIN_SLICES;
+  $('#slotAdd').disabled = N >= MAX_SLICES || !p;
+}
+// Map an index in the visible slot list to the stored manual list (hidden prizes keep their slots).
+function realIndex(visIdx) {
+  const live = new Set(draft.prizes.filter(isOn).map(p => p.id));
+  let v = -1;
+  for (let i = 0; i < draft.wheel.slots.length; i++) if (live.has(draft.wheel.slots[i]) && ++v === visIdx) return i;
+  return -1;
+}
+function editSlots(fn) {
+  freezeToManual(draft);
+  fn();
+  syncCounts(draft);
+  renderPrizeList();
+  refresh();
+  renderWheelTab();
+}
+editCv.addEventListener('click', e => {
+  const r = editCv.getBoundingClientRect();
+  const x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2;
+  const N = slotsFor(draftCfg()).length; if (!N) return;
+  const st = Math.PI * 2 / N;
+  let a = Math.atan2(y, x) + Math.PI / 2;
+  selSlot = ((Math.round(a / st) % N) + N) % N;
+  renderWheelTab();
+});
+editCv.addEventListener('keydown', e => {
+  const N = slotsFor(draftCfg()).length; if (!N) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { selSlot = (selSlot + 1) % N; }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { selSlot = (selSlot - 1 + N) % N; }
+  else return;
+  e.preventDefault(); renderWheelTab();
+});
+$('#slotChips').addEventListener('click', e => {
+  const b = e.target.closest('[data-assign]'); if (!b) return;
+  editSlots(() => { const ri = realIndex(selSlot); if (ri >= 0) draft.wheel.slots[ri] = b.dataset.assign; });
+});
+function moveSel(dir) {
+  editSlots(() => {
+    const N = slotsFor(draftCfg()).length;
+    const j = (selSlot + dir + N) % N;
+    const a = realIndex(selSlot), b = realIndex(j);
+    [draft.wheel.slots[a], draft.wheel.slots[b]] = [draft.wheel.slots[b], draft.wheel.slots[a]];
+    selSlot = j;
+  });
+}
+$('#slotLeft').addEventListener('click', () => moveSel(-1));
+$('#slotRight').addEventListener('click', () => moveSel(1));
+$('#slotAdd').addEventListener('click', () => editSlots(() => {
+  const ri = realIndex(selSlot);
+  draft.wheel.slots.splice(ri + 1, 0, draft.wheel.slots[ri]);
+  selSlot++;
+}));
+$('#slotDel').addEventListener('click', () => editSlots(() => {
+  const ri = realIndex(selSlot);
+  draft.wheel.slots.splice(ri, 1);
+}));
+$('#shuffleSlices').addEventListener('click', () => editSlots(() => {
+  const s = draft.wheel.slots;
+  for (let i = s.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [s[i], s[j]] = [s[j], s[i]]; }
+}));
+function goAuto() {
+  syncCounts(draft);
+  draft.wheel = { mode: 'auto', slots: [] };
+  renderPrizeList(); refresh(); renderWheelTab();
+}
+$('#spreadSlices').addEventListener('click', goAuto);
+$('#autoArrange').addEventListener('change', e => {
+  if (e.target.checked) goAuto();
+  else editSlots(() => {});
+});
+
+/* ---------- look & text tab */
+function renderLook() {
+  $('#tierCards').innerHTML = TIER_ORDER.map(t => {
+    const d = draft.tiers[t];
+    return `<div class="panel tier-card" data-tier="${t}" style="--tc:${d.color};--tt:${inkOn(d.color)}">
+      <div class="tier-sample"><span class="tier-tag" data-o="tag">${esc(d.badge)}</span><strong>${TIER_NAMES[t]}</strong></div>
+      <label class="fld"><span>Badge text</span><input data-tf="badge" value="${esc(d.badge)}" maxlength="14"></label>
+      <div class="fld"><span>Group color</span><div class="color-fld"><input type="color" data-tf="color" value="${d.color}" aria-label="${TIER_NAMES[t]} color"><input data-tf="colorHex" value="${d.color}" maxlength="7" aria-label="${TIER_NAMES[t]} color code" style="flex:1"></div></div>
+      <label class="fld"><span>Slice style</span><select data-tf="style">
+        <option value="bright"${d.style === 'bright' ? ' selected' : ''}>Bright fill</option>
+        <option value="dark"${d.style === 'dark' ? ' selected' : ''}>Dark with colored text</option></select></label>
+      <label class="fld"><span>Headline when won</span><input data-tf="kicker" value="${esc(d.kicker)}" maxlength="30"></label>
+    </div>`;
+  }).join('');
+  $('#textFields').innerHTML = TEXT_FIELDS.map(([k, label, max]) =>
+    `<label class="fld"><span>${label}</span><input data-text="${k}" value="${esc(draft.texts[k])}" maxlength="${max}"></label>`).join('');
+  $('#setLegend').checked = draft.settings.showLegend !== false;
+}
+$('#tierCards').addEventListener('input', e => {
+  const card = e.target.closest('[data-tier]'); const f = e.target.dataset.tf; if (!card || !f) return;
+  const t = draft.tiers[card.dataset.tier];
+  if (f === 'color') { t.color = e.target.value; $('[data-tf="colorHex"]', card).value = t.color; }
+  else if (f === 'colorHex') { if (!HEX.test(e.target.value)) return; t.color = e.target.value; $('[data-tf="color"]', card).value = t.color; }
+  else if (f === 'badge') { t.badge = e.target.value.toUpperCase(); $('[data-o="tag"]', card).textContent = t.badge; }
+  else if (f === 'kicker') t.kicker = e.target.value;
+  card.style.setProperty('--tc', t.color); card.style.setProperty('--tt', inkOn(t.color));
+  draft.prizes.forEach(p => { if (!p.color) { const inp = $(`.prize-row[data-id="${p.id}"] [data-f="color"]`); if (inp) inp.value = tierColor(p); } });
+  refresh();
+});
+$('#tierCards').addEventListener('change', e => {
+  const card = e.target.closest('[data-tier]'); if (!card || e.target.dataset.tf !== 'style') return;
+  draft.tiers[card.dataset.tier].style = e.target.value; refresh();
+});
+$('#textFields').addEventListener('input', e => {
+  const k = e.target.dataset.text; if (!k) return;
+  draft.texts[k] = ['spin', 'locked', 'hub', 'legend'].includes(k) ? e.target.value.toUpperCase() : e.target.value;
+  if (draft.texts[k] !== e.target.value) { const pos = e.target.selectionStart; e.target.value = draft.texts[k]; e.target.setSelectionRange(pos, pos); }
+  refresh();
+});
+$('#setLegend').addEventListener('change', e => { draft.settings.showLegend = e.target.checked; refresh(); });
+
+/* ---------- settings tab */
+function renderSettings() {
+  const s = draft.settings;
+  $('#setDuration').value = s.duration; $('#setDurationOut').textContent = s.duration + 's';
+  $('#setSound').checked = s.sound;
+  $('#setLock').checked = s.lock;
+  $('#credVal').textContent = state.credits;
+}
+$('#setDuration').addEventListener('input', e => { draft.settings.duration = parseFloat(e.target.value); $('#setDurationOut').textContent = draft.settings.duration + 's'; refresh(); });
+$('#setSound').addEventListener('change', e => { draft.settings.sound = e.target.checked; refresh(); });
+$('#setLock').addEventListener('change', e => { draft.settings.lock = e.target.checked; refresh(); });
+$('#pinNew').addEventListener('input', refresh);
+$('#pinConfirm').addEventListener('input', refresh);
+$('#credInc').addEventListener('click', () => { state.credits++; persist(); $('#credVal').textContent = state.credits; updateSpinUI(); });
+$('#credDec').addEventListener('click', () => { state.credits = Math.max(0, state.credits - 1); persist(); $('#credVal').textContent = state.credits; updateSpinUI(); });
+$('#fullscreen').addEventListener('click', () => {
+  const el = document.documentElement;
+  (el.requestFullscreen ? el.requestFullscreen() : Promise.reject()).catch(() => toast('Full screen is not available here'));
+});
+$('#resetDefaults').addEventListener('click', () => askConfirm('reset', 'Replace all prizes, slices, colors and text with the defaults?', 'Restore defaults'));
+
+function downloadFile(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('#exportCfg').addEventListener('click', () => {
+  const { pin, ...settings } = draft.settings;
+  const data = { type: 'gzx-spinner-config', v: 2, savedAt: new Date().toISOString(), prizes: draft.prizes, tiers: draft.tiers, texts: draft.texts, wheel: draft.wheel, settings };
+  downloadFile(`gzx-spinner-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2), 'application/json');
+});
+$('#importCfg').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (!data || !Array.isArray(data.prizes)) throw new Error('bad');
+    const cfg = normalizeConfig({ ...data, settings: { ...draft.settings, ...(data.settings || {}), pin: draft.settings.pin } });
+    Object.assign(draft, clone(cfg));
+    renderAll();
+    toast('Backup loaded. Save to apply');
+  } catch { toast('That file is not a GZX spinner backup'); }
+});
+
+/* ---------- footer: save / cancel / inline confirm (no browser dialogs) */
+function askConfirm(mode, text, okLabel) {
+  confirmMode = mode;
+  const msg = $('#footMsg'); msg.textContent = text; msg.className = 'msg warn';
+  $('#footActions').innerHTML = `<button class="btn btn-ghost" type="button" data-cf="no">Keep editing</button><button class="btn btn-danger" type="button" data-cf="yes">${esc(okLabel)}</button>`;
+  $('#footActions [data-cf="no"]').focus();
+}
+function restoreFooter(skipRefresh) {
+  confirmMode = null;
+  $('#footActions').innerHTML = `<button class="btn btn-ghost" type="button" id="admCancel">Cancel</button><button class="btn btn-primary" type="button" id="admSave">${icon('check')}Save changes</button>`;
+  if (!skipRefresh) refresh();
+}
+$('#footActions').addEventListener('click', e => {
+  if (e.target.closest('#admCancel')) return tryClose();
+  if (e.target.closest('#admSave')) return saveAdmin();
+  const cf = e.target.closest('[data-cf]'); if (!cf) return;
+  const mode = confirmMode;
+  if (cf.dataset.cf === 'no') return restoreFooter();
+  if (mode === 'discard') { restoreFooter(); adminDlg.close(); }
+  else if (mode === 'reset') {
+    const d = defaults();
+    Object.assign(draft, { prizes: d.prizes, tiers: d.tiers, texts: d.texts, wheel: d.wheel });
+    draft.settings.showLegend = true;
+    restoreFooter(true); renderAll(); selectTab('odds'); toast('Defaults loaded. Save to apply');
+  }
+  else if (mode === 'clear') { state.history = []; persist(); restoreFooter(); renderHistory(); toast('History cleared'); }
+});
+function tryClose() {
+  if (confirmMode) return;
+  if (isDirty()) askConfirm('discard', 'Discard your unsaved changes?', 'Discard');
+  else adminDlg.close();
+}
+$('#admClose').addEventListener('click', tryClose);
+adminDlg.addEventListener('cancel', e => { e.preventDefault(); tryClose(); });
+
+function saveAdmin() {
+  if (refresh().length) return;
+  const pn = $('#pinNew').value;
+  const pin = /^\d{4,6}$/.test(pn) && pn === $('#pinConfirm').value ? pn : state.settings.pin;
+  draft.settings.pin = pin;
+  syncCounts(draft);
+  Object.assign(state, clone(draftCfg()));
+  persist();
+  applyState();
+  $('#pinNew').value = ''; $('#pinConfirm').value = '';
+  snapshot = JSON.stringify(draft);
+  refresh();
+  toast('Saved. The wheel is updated');
+}
+
+/* ---------- history */
+function renderHistory() {
+  const H = state.history;
+  const onWheel = new Set(layout);
+  const live = state.prizes.filter(p => isOn(p) && onWheel.has(p.id));
+  const tw = sum(live, p => p.weight) || 1;
+  const wins = H.filter(h => h.kind !== 'none').length;
+  const jackpots = H.filter(h => h.tier === 'low' && h.kind !== 'none').length;
+  const unclaimed = H.filter(h => h.code && !h.claimed).length;
+  $('#kpis').innerHTML = [
+    ['Total spins', H.length], ['Win rate', H.length ? pct1(wins / H.length * 100) : '—'],
+    ['Jackpots', jackpots], ['Unclaimed codes', unclaimed],
+  ].map(([k, v]) => `<div class="kpi"><small>${k}</small><strong>${v}</strong></div>`).join('');
+
+  const counts = {}; H.forEach(h => { counts[h.id] = (counts[h.id] || 0) + 1; });
+  const rows = state.prizes.map(p => {
+    const exp = live.includes(p) ? p.weight / tw * 100 : 0;
+    const c = counts[p.id] || 0;
+    return `<tr style="--tc:${prizeColor(p)}"><td><span class="dot"></span>${esc(p.name)}${isOn(p) ? '' : ' <span style="color:var(--muted)">(hidden)</span>'}</td><td class="num">${pct1(exp)}</td><td class="num">${H.length ? pct1(c / H.length * 100) : '—'}</td><td class="num">${c}</td></tr>`;
+  }).join('');
+  $('#statTable').innerHTML = `<thead><tr><th>Prize</th><th class="num">Expected</th><th class="num">Actual</th><th class="num">Spins</th></tr></thead><tbody>${rows}</tbody>`;
+
+  const q = $('#codeSearch').value.trim().toUpperCase().replace(/^GZX-?/, '');
+  const list = (q ? H.filter(h => h.code && h.code.replace('GZX-', '').includes(q)) : H).slice(0, 150);
+  const fmt = t => new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  $('#histTable').innerHTML = list.length
+    ? `<thead><tr><th>Time</th><th>Result</th><th>Code</th><th></th></tr></thead><tbody>${list.map(h => {
+        const idx = H.indexOf(h);
+        const color = h.kind === 'none' ? '#77706B' : (state.tiers[h.tier] || state.tiers.high).color;
+        return `<tr style="--tc:${color}"><td style="white-space:nowrap;color:var(--muted)">${fmt(h.t)}</td><td><span class="dot"></span>${esc(h.name)}</td><td class="code">${esc(h.code || '—')}</td><td class="num">${h.code ? `<button type="button" class="claim-btn${h.claimed ? ' done' : ''}" data-claim="${idx}" aria-pressed="${h.claimed}">${h.claimed ? 'Claimed' : 'Mark claimed'}</button>` : ''}</td></tr>`;
+      }).join('')}</tbody>`
+    : `<tbody><tr><td class="empty">${q ? 'No spin matches that code.' : 'No spins yet. Results show up here after the first spin.'}</td></tr></tbody>`;
+}
+$('#codeSearch').addEventListener('input', renderHistory);
+$('#histTable').addEventListener('click', e => {
+  const b = e.target.closest('[data-claim]'); if (!b) return;
+  const h = state.history[Number(b.dataset.claim)]; if (!h) return;
+  h.claimed = !h.claimed; persist(); renderHistory();
+});
+$('#clearHist').addEventListener('click', () => { if (state.history.length) askConfirm('clear', `Delete all ${state.history.length} spin records?`, 'Clear history'); });
+$('#exportCsv').addEventListener('click', () => {
+  const lines = [['time', 'prize', 'odds_group', 'result', 'code', 'claimed']].concat(
+    state.history.map(h => [new Date(h.t).toISOString(), h.name, TIER_NAMES[h.tier] || h.tier, h.kind, h.code, h.claimed ? 'yes' : 'no']));
+  const csv = lines.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  downloadFile(`gzx-spins-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
+});
+
+/* ------------------------------------------------------------------ boot */
+applyState();
+sizeCanvas();
+if (document.fonts) {
+  document.fonts.load('40px "Russo One"').then(drawMain).catch(() => {});
+  document.fonts.load('700 20px "Chakra Petch"').then(drawMain).catch(() => {});
+  document.fonts.ready.then(drawMain);
+}
+addEventListener('resize', initEmbers);
+})();
+</script>
+</body>
+</html>

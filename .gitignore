@@ -1,0 +1,12 @@
+# Local editor / tooling
+.claude/
+.vscode/
+.idea/
+
+# Netlify CLI local state
+.netlify/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
